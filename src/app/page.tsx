@@ -17,7 +17,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   console.log({ data });
   return (
     <main>
-<h1>Hello & Welcome, <br></br><code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
+<h1>Hello & Welcome, &nbsp; &nbsp; <code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
 <ProductSelectionComponent/> 
     </main>
   );
