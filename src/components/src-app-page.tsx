@@ -118,7 +118,7 @@ export function ProductSelectionComponent() {
     
     setTimeout(() => {
       setIsLoading(false);
-      window.open('https://app.firmos.ai/invoices', '_blank', 'noopener,noreferrer');
+      window.open('https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5', '_blank', 'noopener,noreferrer');
     }, LOADING_DELAY);
   };
   
