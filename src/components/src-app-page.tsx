@@ -112,14 +112,16 @@ export function ProductSelectionComponent() {
   }
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault()
-    setShowSuccessModal(false)
-    setIsLoading(true)
+    e.preventDefault();
+    setShowSuccessModal(false);
+    setIsLoading(true);
+    
     setTimeout(() => {
-      setIsLoading(false)
-      window.location.href = 'https://app.firmos.ai/invoices'
-    }, LOADING_DELAY)
-  }
+      setIsLoading(false);
+      window.open('https://app.firmos.ai/invoices', '_blank', 'noopener,noreferrer');
+    }, LOADING_DELAY);
+  };
+  
 
   return (
     <div className="min-h-screen bg-[#121212] p-6 relative">
@@ -257,15 +259,19 @@ export function ProductSelectionComponent() {
                 Your invoice is ready. Click the link below to view it.
               </DialogDescription>
             </DialogHeader>
+
             <div className="mt-4">
-              <a
-                href="https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5"
-                className="text-blue-500 hover:text-blue-600 transition-colors"
-                onClick={handleInvoiceClick}
-              >
-                Click here to go to the invoice
-              </a>
-            </div>
+      <a
+    href="https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5"
+    className="text-blue-500 hover:text-blue-600 transition-colors"
+    onClick={handleInvoiceClick}
+    target="_blank"
+    rel="noopener noreferrer"
+       >
+    Click here to go to the invoice
+  </a>
+</div>
+
           </DialogContent>
         </Dialog>
       </div>
