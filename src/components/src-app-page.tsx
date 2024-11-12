@@ -259,7 +259,7 @@ export function ProductSelectionComponent() {
             </DialogHeader>
             <div className="mt-4">
               <a
-                href="https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5"
+                href="https://app.firmos.ai/invoices"
                 className="text-blue-500 hover:text-blue-600 transition-colors"
                 onClick={handleInvoiceClick}
               >
