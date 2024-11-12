@@ -24,7 +24,7 @@ export function ProductSelectionComponent() {
 
   const features = {
     '1-pillar': [
-      "1 firm's core operation",
+      "1 firm's core operations",
       "Custom AI Workflow Automations",
       "Dedicated Support",
       "Basic Analytics"
