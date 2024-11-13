@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Check, Info, Loader2 } from 'lucide-react'
+import { generateInvoice } from "@/utils/invoice_api"
+import { invoicelist } from "@/utils/invoice_query"
 import {
   Dialog,
   DialogContent,
@@ -54,7 +56,7 @@ export function BlockPage() {
   const products = [
     {
       id: 'growth',
-      title: 'FIRMOS GROWTH PLATFORM',
+      title: '[TEST] Product',
       subtitle: 'Core Focus',
       description: '(1 Pillar)',
       fullDescription: 'Focus on one core area of your firm\'s operations. Whether you\'re looking to enhance lead generation, streamline talent management, improve client delivery, or optimize financial processes, FirmOS provides a tailored solution for your chosen pillar.',
@@ -95,13 +97,48 @@ export function BlockPage() {
     setShowNameInput(productId)
   }
 
-  const handleProceedToPayment = () => {
-    setIsLoading(true)
-    setTimeout(() => {
-      setIsLoading(false)
-      setShowSuccessModal(true)
-    }, LOADING_DELAY)
-  }
+  const client_name = "Earyl Buque"
+  const product_name = "[TEST] Product"
+
+  const handleProceedToPayment = async () => {
+    try {
+      if (!clientName.trim()) {
+        console.error('Client name is required');
+        return;
+      }
+  
+      setIsLoading(true);
+      console.log("Generating Invoice");
+      
+      const selectedProductDetails = products.find(p => p.id === showNameInput);
+      if (!selectedProductDetails) {
+        throw new Error('No product selected');
+      }
+  
+      console.log('Request parameters:', {
+        client_name: clientName,
+        product_name: selectedProductDetails.title
+      });
+  
+      const invoiceAPIresponse = await generateInvoice(
+        clientName.trim(),
+        selectedProductDetails.title
+      );
+  
+      console.log('API Response:', invoiceAPIresponse);
+  
+      await new Promise(resolve => setTimeout(resolve, LOADING_DELAY));
+      
+      setIsLoading(false);
+      setShowSuccessModal(true);
+  
+    } catch (error) {
+      console.error("Error generating invoice:", error);
+      setIsLoading(false);
+      // Maybe show an error message to the user
+      // setErrorMessage(error instanceof Error ? error.message : 'Failed to generate invoice');
+    }
+  };
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
