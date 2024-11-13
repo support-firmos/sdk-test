@@ -1,6 +1,7 @@
-import { ProductSelectionComponent } from '@/components/src-app-page';
+import { BlockPage} from '@/components/src-app-page';
 import { TokenGate } from '@/components/TokenGate';
 import { getSession } from '@/utils/session';
+import Head from 'next/head';
 
 
 /**
@@ -16,9 +17,11 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   // you run `yarn dev`
   console.log({ data });
   return (
-    <main>
+
+<main>
+
 <h1>Hello & Welcome, &nbsp; &nbsp; <code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
-<ProductSelectionComponent/> 
+<BlockPage/> 
     </main>
   );
 }

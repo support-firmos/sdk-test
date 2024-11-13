@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from "@/components/ui/badge"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Check, Info, Loader2 } from 'lucide-react'
 import {
   Dialog,
@@ -14,34 +15,30 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-const LOADING_DELAY = 5000; // in milliseconds
-
-export function ProductSelectionComponent() {
+export function BlockPage() {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [clientName, setClientName] = useState<string>('')
+  const [showNameInput, setShowNameInput] = useState<string | null>(null)
+
+  const LOADING_DELAY = 5000; // in milliseconds
 
   const features = {
-    '1-pillar': [
-      "1 firm's core operations",
+    'growth': [
+      "1 firm's core operation",
       "Custom AI Workflow Automations",
       "Dedicated Support",
       "Basic Analytics"
     ],
-    '2-pillars': [
+    'accelerator': [
       "2 firm's core operations",
       "Custom AI Workflow Automations",
       "Dedicated Support",
       "Advance Analytics"
     ],
-    '3-pillars': [
-      "3 firm's core operations",
-      "Custom AI Workflow Automations",
-      "Dedicated Support",
-      "Advance Analytics"
-    ],
-    '4-pillars': [
+    'mastery': [
       "Complete firm's core operations",
       "Custom AI Workflow Automations",
       "Dedicated Support",
@@ -56,37 +53,28 @@ export function ProductSelectionComponent() {
 
   const products = [
     {
-      id: '1-pillar',
-      title: '1 PILLAR',
-      subtitle: 'FIRMOS GROWTH PLATFORM',
-      description: 'Core Focus (1 Pillar)',
+      id: 'growth',
+      title: 'FIRMOS GROWTH PLATFORM',
+      subtitle: 'Core Focus',
+      description: '(1 Pillar)',
       fullDescription: 'Focus on one core area of your firm\'s operations. Whether you\'re looking to enhance lead generation, streamline talent management, improve client delivery, or optimize financial processes, FirmOS provides a tailored solution for your chosen pillar.',
       price: 2450,
       savings: null
     },
     {
-      id: '2-pillars',
-      title: '2 PILLARS',
-      subtitle: 'FIRMOS BUSINESS ACCELERATOR',
+      id: 'accelerator',
+      title: 'FIRMOS BUSINESS ACCELERATOR',
+      subtitle: 'Dual Focus',
       description: '(2 Pillars)',
       fullDescription: 'Optimize two critical aspects of your firm\'s operations. Choose the combination that fits your current needs—whether it\'s increasing client acquisition and improving internal efficiency, or enhancing financial control and client fulfillment.',
       price: 3450,
       savings: 30
     },
     {
-      id: '3-pillars',
-      title: '3 PILLARS',
-      subtitle: 'FIRMOS TRANSFORMATION SUITE',
+      id: 'mastery',
+      title: 'FIRMOS OPERATIONS MASTERY',
+      subtitle: 'Complete Solution',
       description: '(3 Pillars)',
-      fullDescription: 'Cover three key areas of your business to drive greater operational efficiency. FirmOS delivers practical solutions that help you manage leads, optimize your team, and improve client outcomes, allowing you to focus on strategic growth.',
-      price: 4450,
-      savings: 40
-    },
-    {
-      id: '4-pillars',
-      title: '4 PILLARS',
-      subtitle: 'FIRMOS OPERATIONS MASTERY',
-      description: '(4 Pillars)',
       fullDescription: 'Full operational support across Business Development, Talent, Fulfillment, and Finance. FirmOS equips you with a complete solution to manage and scale your firm efficiently, ensuring alignment across all key functions.',
       price: 4950,
       savings: 50
@@ -103,7 +91,11 @@ export function ProductSelectionComponent() {
     }
   ]
 
-  const handleSelectPackage = () => {
+  const handleSelectPackage = (productId: string) => {
+    setShowNameInput(productId)
+  }
+
+  const handleProceedToPayment = () => {
     setIsLoading(true)
     setTimeout(() => {
       setIsLoading(false)
@@ -112,16 +104,14 @@ export function ProductSelectionComponent() {
   }
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    setShowSuccessModal(false);
-    setIsLoading(true);
-    
+    e.preventDefault()
+    setShowSuccessModal(false)
+    setIsLoading(true)
     setTimeout(() => {
-      setIsLoading(false);
+      setIsLoading(false)
       window.open('https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5', '_blank', 'noopener,noreferrer');
-    }, LOADING_DELAY);
-  };
-  
+    }, LOADING_DELAY)
+  }
 
   return (
     <div className="min-h-screen bg-[#121212] p-6 relative">
@@ -151,7 +141,7 @@ export function ProductSelectionComponent() {
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {products.map((product) => (
             <motion.div
               key={product.id}
@@ -214,32 +204,39 @@ export function ProductSelectionComponent() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </CardContent>
 
-                  <AnimatePresence>
-                    {(hoveredProduct === product.id || selectedProduct === product.id) && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 20 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        
+                <CardFooter>
+                  {showNameInput === product.id ? (
+                    <div className="w-full space-y-4">
+                      <Input
+                        type="text"
+                        placeholder="Enter your name to confirm the purchase"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                        className="bg-gray-800 text-white border-gray-700"
+                      />
+                      {clientName && (
                         <Button 
                           className="w-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleSelectPackage()
-                          }}
-                          disabled={isLoading}
+                          onClick={handleProceedToPayment}
                         >
-                          Select Package
+                          Proceed to Payment
                         </Button>
-
-
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </CardContent>
+                      )}
+                    </div>
+                  ) : (
+                    <Button 
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSelectPackage(product.id)
+                      }}
+                    >
+                      Select Package
+                    </Button>
+                  )}
+                </CardFooter>
               </Card>
             </motion.div>
           ))}
@@ -259,19 +256,15 @@ export function ProductSelectionComponent() {
                 Your invoice is ready. Click the link below to view it.
               </DialogDescription>
             </DialogHeader>
-
             <div className="mt-4">
-      <a
-    href="https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5"
-    className="text-blue-500 hover:text-blue-600 transition-colors"
-    onClick={handleInvoiceClick}
-    target="_blank"
-    rel="noopener noreferrer"
-       >
-    Click here to go to the invoice
-  </a>
-</div>
-
+              <a
+                href="https://app.firmos.ai/invoices/pay?invoiceId=in_1QKQnXFdviIHOKAnvxdLH7g5"
+                className="text-blue-500 hover:text-blue-600 transition-colors"
+                onClick={handleInvoiceClick}
+              >
+                Click here to go to the invoice
+              </a>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
