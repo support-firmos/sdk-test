@@ -17,13 +17,8 @@ export async function POST(request: Request) {
 
     const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
     
-    // Create the URL with encoded parameters
-    const params = new URLSearchParams({
-      client_name: clientName,
-      product_name: productName
-    }).toString();
-
-    const fullUrl = `${BASE_URL}?${params}`;
+    // Direct URL construction with proper single encoding
+    const fullUrl = `${BASE_URL}?client_name=${clientName.replace(/ /g, '%20')}&product_name=${productName.replace(/ /g, '%20')}`;
     
     console.log('🔗 Requesting URL:', fullUrl);
 
@@ -32,7 +27,6 @@ export async function POST(request: Request) {
       headers: {
         'accept': 'application/json'
       },
-      // Empty body as per FastAPI requirements
       body: ''
     });
 

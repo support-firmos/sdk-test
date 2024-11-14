@@ -135,17 +135,15 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    // Create properly encoded URL parameters
-    const encodeWithSpaces = (str: string) => {
-      return encodeURIComponent(str).replace(/\+/g, '%20');
+    // Single encode the parameters with proper space handling
+    const encodeParam = (str: string) => {
+      return str
+        .replace(/\[/g, '%5B')
+        .replace(/\]/g, '%5D')
+        .replace(/ /g, '%20');
     };
   
-    const params = new URLSearchParams({
-      client_name: encodeWithSpaces(clientName),
-      product_name: encodeWithSpaces(selectedProductDetails.title)
-    }).toString();
-  
-    const url = `/generate-invoice?${params}`;
+    const url = `/generate-invoice?client_name=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
   
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
@@ -161,7 +159,6 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         headers: {
           'accept': 'application/json'
         },
-        // Empty body as per FastAPI requirements
         body: ''
       });
   
