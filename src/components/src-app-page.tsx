@@ -136,27 +136,23 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       : sessionData.company?.name || "Unknown Client";
   
     // Create query parameters
-    const params = {
+    const params = new URLSearchParams({
       client_name: clientName,
       product_name: selectedProductDetails.title
-    };
+    });
   
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
     console.log('👤 Client Name:', clientName);
-    console.log('🔍 Query Parameters:', params);
+    console.log('🔍 Query Parameters:', Object.fromEntries(params));
     console.groupEnd();
   
     try {
       console.time('Invoice Generation Duration');
       
-      // Updated URL path
-      const response = await fetch('/generate-invoice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(params)
+      // Use GET method with query parameters
+      const response = await fetch(`/generate-invoice?${params.toString()}`, {
+        method: 'GET',
       });
   
       console.timeEnd('Invoice Generation Duration');

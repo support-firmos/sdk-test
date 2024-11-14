@@ -20,23 +20,32 @@ const logApiResponse = (status: number, data: any, error?: any) => {
   console.groupEnd();
 };
 
-export async function POST(request: Request) {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const clientName = searchParams.get('client_name');
+  const productName = searchParams.get('product_name');
+
+  if (!clientName || !productName) {
+    return NextResponse.json(
+      { error: 'Missing required parameters' },
+      { status: 400 }
+    );
+  }
+
   const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
   
   try {
-    const body = await request.json();
-    
     // Create URL with query parameters
     const params = new URLSearchParams({
-      client_name: body.client_name,
-      product_name: body.product_name
+      client_name: clientName,
+      product_name: productName
     });
     
     const fullUrl = `${BASE_URL}?${params.toString()}`;
     
     logApiRequest('GET', fullUrl, {
-      client_name: body.client_name,
-      product_name: body.product_name
+      client_name: clientName,
+      product_name: productName
     });
 
     console.time('API Call Duration');
