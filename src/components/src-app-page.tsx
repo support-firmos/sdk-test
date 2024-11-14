@@ -18,15 +18,15 @@ import {
 type SessionData = {
   client?: {
     givenName: string;
-    lastName: string;
+    familyName: string;
   };
   company?: {
     name: string;
   };
 };
 
-
-export function BlockPage({ sessionData }: { sessionData: SessionData }) {
+export function BlockPage() {
+// export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -131,10 +131,13 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   
     // Construct the client name
-    const clientName = sessionData.client 
-      ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
-      : sessionData.company?.name || "Unknown Client";
-  
+    // const clientName = sessionData.client 
+    //   ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
+    //   : sessionData.company?.name || "Unknown Client";
+    
+      const clientName = "Earyl Buque"
+
+
     // Single encode the parameters with proper space and bracket handling
     const encodeParam = (str: string) => {
       return str.split('').map(char => {
@@ -211,6 +214,9 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   useEffect(() => {
     document.title = 'Product Selection'
   }, [])
+
+  // Sample Implementation
+  // const invoiceurl = `https://app.firmos.ai/invoices/pay?invoiceId=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
 
   return (
     <div className="min-h-screen bg-[#121212] p-6 relative">
@@ -422,7 +428,9 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
             </DialogHeader>
             <div className="mt-4">
               <a
-                href="https://app.firmos.ai/invoices"
+              // Sample Implementation
+                // href={invoiceurl}
+                href='https://app.firmos.ai/invoices/pay?invoiceId='
                 className="text-blue-500 hover:text-blue-600 transition-colors"
                 onClick={handleInvoiceClick}
                 target="_blank"

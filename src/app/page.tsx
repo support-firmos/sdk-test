@@ -15,15 +15,16 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   return (
     <main>
       <h1>Hello & Welcome, &nbsp; &nbsp; <code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
-      <BlockPage sessionData={{
+      {/* <BlockPage sessionData={{
         client: data.client ? {
           givenName: data.client.givenName || '',
-          lastName: data.client.familyName || ''  // Map familyName to lastName
+          familyName: data.client.familyName || '' 
         } : undefined,
         company: data.company ? {
           name: data.company.name || ''  // Ensure name is a non-nullable string
         } : undefined
-      }}/> 
+      }}/>  */}
+      <BlockPage/>
     </main>
   );
 }
