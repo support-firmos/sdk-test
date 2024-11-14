@@ -1,4 +1,3 @@
-// src/app/generate-invoice/route.ts
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
@@ -15,20 +14,7 @@ export async function POST(request: Request) {
     }
 
     const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
-
-    // Encode parameters properly
-    const encodeParam = (str: string) => {
-      return str.split('').map(char => {
-        switch(char) {
-          case ' ': return '%20';
-          case '[': return '%5B';
-          case ']': return '%5D';
-          default: return char;
-        }
-      }).join('');
-    };
-    
-    const fullUrl = `${BASE_URL}?client_name=${encodeParam(clientName)}&product_name=${encodeParam(productName)}`;
+    const fullUrl = `${BASE_URL}?client_name=${encodeURIComponent(clientName)}&product_name=${encodeURIComponent(productName)}`;
     
     console.log('🔗 Requesting URL:', fullUrl);
 
@@ -36,23 +22,32 @@ export async function POST(request: Request) {
       method: 'POST',
       headers: {
         'accept': 'application/json'
-      },
-      body: ''
+      }
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(`API responded with status ${response.status}: ${JSON.stringify(data)}`);
-    }
+    // Return immediately after successful response
+    return new NextResponse(JSON.stringify(data), {
+      status: 200,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
 
-    return NextResponse.json(data);
   } catch (error) {
     console.error('❌ Error:', error);
-    
-    return NextResponse.json(
-      { error: 'Failed to generate invoice', details: error instanceof Error ? error.message : 'Unknown error' },
-      { status: 500 }
+    return new NextResponse(
+      JSON.stringify({ 
+        error: 'Failed to generate invoice', 
+        details: error instanceof Error ? error.message : 'Unknown error'
+      }), 
+      { 
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
     );
   }
 }
