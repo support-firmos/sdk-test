@@ -135,23 +135,14 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    // Custom URL encoding function
-    const customEncode = (str: string) => {
-      return str
-        .replace(/ /g, '%20')  // Replace spaces with %20
-        .replace(/\(/g, '(')   // Keep parentheses as is
-        .replace(/\)/g, ')')   // Keep parentheses as is
-        .replace(/\$/g, '$')   // Keep dollar signs as is
-        .replace(/\+/g, '%20') // Replace + with %20
-        .replace(/\%/g, '%25') // Encode % signs
-        .replace(/\-/g, '-');  // Keep hyphens as is
-    };
+    // Properly encode the parameters
+    const encodedParams = new URLSearchParams({
+      client_name: clientName,
+      product_name: selectedProductDetails.title
+    }).toString();
   
-    // Create the URL with custom encoding
-    const encodedClientName = customEncode(clientName);
-    const encodedProductName = customEncode(selectedProductDetails.title);
-    
-    const url = `/generate-invoice?client_name=${encodedClientName}&product_name=${encodedProductName}`;
+    // Create the URL
+    const url = `/generate-invoice?${encodedParams}`;
   
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
