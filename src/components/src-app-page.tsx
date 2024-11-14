@@ -61,7 +61,7 @@ export function BlockPage() {
       heading: 'FIRMOS GROWTH PLATFORM',
       subtitle: 'Core Focus',
       description: '(1 Pillar)',
-      fullDescription: 'Focus on one core area of your firm\'s operations. Whether you\'re looking to enhance lead generation, streamline talent management, improve client delivery, or optimize financial processes, FirmOS provides a tailored solution for your chosen pillar.',
+      fullDescription: 'Focus on one core area of your firm\'s operations. Whether you\'re looking to enhance lead generation, streamline talent management, or improve client delivery. FirmOS provides a tailored solution for your chosen pillar.',
       price: 2450,
       savings: null
     },
@@ -71,7 +71,7 @@ export function BlockPage() {
       heading: 'FIRMOS BUSINESS ACCELERATOR',
       subtitle: 'Dual Focus',
       description: '(2 Pillars)',
-      fullDescription: 'Optimize two critical aspects of your firm\'s operations. Choose the combination that fits your current needs—whether it\'s increasing client acquisition and improving internal efficiency, or enhancing financial control and client fulfillment.',
+      fullDescription: 'Optimize two critical aspects of your firm\'s operations. Choose the combination that fits your current needs—whether it\'s increasing client acquisition and improving internal efficiency, or client fulfillment.',
       price: 3450,
       savings: 30
     },
@@ -81,9 +81,9 @@ export function BlockPage() {
       heading: 'FIRMOS OPERATIONS MASTERY',
       subtitle: 'Complete Solution',
       description: '(4 Pillars)',
-      fullDescription: 'Full operational support across Business Development, Talent, Fulfillment, and Finance. FirmOS equips you with a complete solution to manage and scale your firm efficiently, ensuring alignment across all key functions.',
-      price: 4950,
-      savings: 50
+      fullDescription: 'Full operational support across Business Development, Talent, and Fulfillment . FirmOS equips you with a complete solution to manage and scale your firm efficiently, ensuring alignment across all key functions.',
+      price: 4450,
+      savings: 40
     },
     {
       id: 'consulting',
