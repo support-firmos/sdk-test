@@ -135,21 +135,41 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
+    const requestBody = {
+      client_name: clientName,
+      product_name: selectedProductDetails.title
+    };
+  
+    // Log the request details
+    console.group('📡 Invoice Generation Request');
+    console.log('🏷️ Selected Product:', selectedProductDetails);
+    console.log('👤 Client Name:', clientName);
+    console.log('📦 Request Payload:', requestBody);
+    console.groupEnd();
+  
     try {
-      // Use the local API route instead of calling the external API directly
+      console.time('Invoice Generation Duration');
+      
       const response = await fetch('/api/generate-invoice', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          client_name: clientName,
-          product_name: selectedProductDetails.title
-        })
+        body: JSON.stringify(requestBody)
       });
   
+      console.timeEnd('Invoice Generation Duration');
+  
+      const data = await response.json();
+  
+      // Log the response
+      console.group('📥 Invoice Generation Response');
+      console.log('📊 Status:', response.status);
+      console.log('📄 Response Data:', data);
+      console.groupEnd();
+  
       if (!response.ok) {
-        throw new Error(`API error: ${response.statusText}`);
+        throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
       }
   
       // Process loading messages
@@ -166,10 +186,17 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       }, LOADING_DELAY / loadingMessages.length);
   
     } catch (err) {
+      // Log the error
+      console.group('❌ Invoice Generation Error');
+      console.error('Error Details:', err);
+      console.trace('Error Stack Trace:');
+      console.groupEnd();
+  
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsLoading(false);
     }
   };
+  
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
