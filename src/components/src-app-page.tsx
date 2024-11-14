@@ -57,7 +57,7 @@ export function BlockPage() {
   const products = [
     {
       id: 'growth',
-      title: 'FirmOS Growth Platform - Core Focus (1 Pillar) - $2,450',
+      title: '[TEST] Product',
       heading: 'FIRMOS GROWTH PLATFORM',
       subtitle: 'Core Focus',
       description: '(1 Pillar)',
