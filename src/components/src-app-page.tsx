@@ -135,14 +135,12 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    // Properly encode the parameters
-    const encodedParams = new URLSearchParams({
-      client_name: clientName,
-      product_name: selectedProductDetails.title
-    }).toString();
+    // Create properly encoded URL parameters with %20 for spaces
+    const encodeWithSpaces = (str: string) => {
+      return encodeURIComponent(str).replace(/%20|\+/g, '%20');
+    };
   
-    // Create the URL
-    const url = `/generate-invoice?${encodedParams}`;
+    const url = `/generate-invoice?client_name=${encodeWithSpaces(clientName)}&product_name=${encodeWithSpaces(selectedProductDetails.title)}`;
   
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);

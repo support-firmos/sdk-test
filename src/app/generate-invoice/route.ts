@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 
+const encodeWithSpaces = (str: string) => {
+  return encodeURIComponent(str).replace(/%20|\+/g, '%20');
+};
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const clientName = searchParams.get('client_name');
@@ -15,13 +19,8 @@ export async function GET(request: Request) {
   const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
   
   try {
-    // Create properly encoded URL parameters
-    const params = new URLSearchParams({
-      client_name: clientName,
-      product_name: productName
-    }).toString();
-
-    const fullUrl = `${BASE_URL}?${params}`;
+    // Create properly encoded URL with %20 for spaces
+    const fullUrl = `${BASE_URL}?client_name=${encodeWithSpaces(clientName)}&product_name=${encodeWithSpaces(productName)}`;
     
     console.log('🔗 Requesting URL:', fullUrl);
 
