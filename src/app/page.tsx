@@ -12,19 +12,23 @@ export const revalidate = 180;
 
 async function Content({ searchParams }: { searchParams: SearchParams }) {
   const data = await getSession(searchParams);
-  // Console log the data to see what's available
-  // You can see these logs in the terminal where
-  // you run `yarn dev`
-  console.log({ data });
   return (
-
-<main>
-
-<h1>Hello & Welcome, &nbsp; &nbsp; <code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
-<BlockPage/> 
+    <main>
+      <h1>Hello & Welcome, &nbsp; &nbsp; <code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
+      <BlockPage sessionData={{
+        client: data.client ? {
+          givenName: data.client.givenName || '',
+          lastName: data.client.familyName || ''  // Map familyName to lastName
+        } : undefined,
+        company: data.company ? {
+          name: data.company.name || ''  // Ensure name is a non-nullable string
+        } : undefined
+      }}/> 
     </main>
   );
 }
+
+
 export default function Page({ searchParams }: { searchParams: SearchParams }) {
   return (
     <TokenGate searchParams={searchParams}>

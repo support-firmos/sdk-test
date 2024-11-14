@@ -14,14 +14,27 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-export function BlockPage() {
+// Add these new types
+type SessionData = {
+  client?: {
+    givenName: string;
+    lastName: string;
+  };
+  company?: {
+    name: string;
+  };
+};
+
+
+export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [loadingText, setLoadingText] = useState("Getting things ready...")
+  const [error, setError] = useState<string | null>(null)
 
-  const LOADING_DELAY = 7000; // 7 seconds
+  const LOADING_DELAY = 7000;
   const loadingMessages = [
     "Getting things ready...",
     "Calculating totals...",
@@ -98,23 +111,64 @@ export function BlockPage() {
     }
   ]
 
-  const handleSelectPackage = () => {
-    setIsLoading(true)
-    let currentMessage = 0
-    setLoadingText(loadingMessages[currentMessage])
-    
-    const interval = setInterval(() => {
-      currentMessage++
-      if (currentMessage < loadingMessages.length) {
-        setLoadingText(loadingMessages[currentMessage])
+  const handleSelectPackage = async () => {
+    if (!selectedProduct) {
+      setError("Please select a package first");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    let currentMessage = 0;
+    setLoadingText(loadingMessages[currentMessage]);
+
+    // Get the selected product details
+    const selectedProductDetails = products.find(p => p.id === selectedProduct);
+    if (!selectedProductDetails) {
+      setError("Selected product not found");
+      setIsLoading(false);
+      return;
+    }
+
+    // Construct the client name
+    const clientName = sessionData.client 
+      ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
+      : sessionData.company?.name || "Unknown Client";
+
+    try {
+      const response = await fetch('https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          client_name: clientName,
+          product_name: selectedProductDetails.title
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`);
       }
-      if (currentMessage >= loadingMessages.length) {
-        clearInterval(interval)
-        setIsLoading(false)
-        setShowSuccessModal(true)
-      }
-    }, LOADING_DELAY / loadingMessages.length)
-  }
+
+      // Process loading messages
+      const interval = setInterval(() => {
+        currentMessage++;
+        if (currentMessage < loadingMessages.length) {
+          setLoadingText(loadingMessages[currentMessage]);
+        }
+        if (currentMessage >= loadingMessages.length) {
+          clearInterval(interval);
+          setIsLoading(false);
+          setShowSuccessModal(true);
+        }
+      }, LOADING_DELAY / loadingMessages.length);
+
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setIsLoading(false);
+    }
+  };
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
@@ -126,6 +180,11 @@ export function BlockPage() {
 
   return (
     <div className="min-h-screen bg-[#121212] p-6 relative">
+      {error && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white px-4 py-2 rounded shadow-lg">
+          {error}
+        </div>
+      )}
       <AnimatePresence>
         {isLoading && (
           <motion.div
