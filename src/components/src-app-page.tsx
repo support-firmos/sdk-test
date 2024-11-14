@@ -116,12 +116,12 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       setError("Please select a package first");
       return;
     }
-
+  
     setIsLoading(true);
     setError(null);
     let currentMessage = 0;
     setLoadingText(loadingMessages[currentMessage]);
-
+  
     // Get the selected product details
     const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
@@ -129,14 +129,15 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       setIsLoading(false);
       return;
     }
-
+  
     // Construct the client name
     const clientName = sessionData.client 
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
-
+  
     try {
-      const response = await fetch('https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice', {
+      // Use the local API route instead of calling the external API directly
+      const response = await fetch('/api/generate-invoice', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,11 +147,11 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
           product_name: selectedProductDetails.title
         })
       });
-
+  
       if (!response.ok) {
         throw new Error(`API error: ${response.statusText}`);
       }
-
+  
       // Process loading messages
       const interval = setInterval(() => {
         currentMessage++;
@@ -163,7 +164,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
           setShowSuccessModal(true);
         }
       }, LOADING_DELAY / loadingMessages.length);
-
+  
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
       setIsLoading(false);
