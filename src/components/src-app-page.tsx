@@ -135,23 +135,34 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    // Create query parameters
-    const params = new URLSearchParams({
-      client_name: clientName,
-      product_name: selectedProductDetails.title
-    });
+    // Custom URL encoding function
+    const customEncode = (str: string) => {
+      return str
+        .replace(/ /g, '%20')  // Replace spaces with %20
+        .replace(/\(/g, '(')   // Keep parentheses as is
+        .replace(/\)/g, ')')   // Keep parentheses as is
+        .replace(/\$/g, '$')   // Keep dollar signs as is
+        .replace(/\+/g, '%20') // Replace + with %20
+        .replace(/\%/g, '%25') // Encode % signs
+        .replace(/\-/g, '-');  // Keep hyphens as is
+    };
+  
+    // Create the URL with custom encoding
+    const encodedClientName = customEncode(clientName);
+    const encodedProductName = customEncode(selectedProductDetails.title);
+    
+    const url = `/generate-invoice?client_name=${encodedClientName}&product_name=${encodedProductName}`;
   
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
     console.log('👤 Client Name:', clientName);
-    console.log('🔍 Query Parameters:', Object.fromEntries(params));
+    console.log('🔗 Full URL:', url);
     console.groupEnd();
   
     try {
       console.time('Invoice Generation Duration');
       
-      // Use GET method with query parameters
-      const response = await fetch(`/generate-invoice?${params.toString()}`, {
+      const response = await fetch(url, {
         method: 'GET',
       });
   
