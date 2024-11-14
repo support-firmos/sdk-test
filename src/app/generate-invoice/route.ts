@@ -1,3 +1,4 @@
+// src/app/generate-invoice/route.ts
 import { NextResponse } from 'next/server'
 
 const logApiRequest = (method: string, url: string, params: any) => {
@@ -33,7 +34,6 @@ export async function POST(request: Request) {
     
     const fullUrl = `${BASE_URL}?${params.toString()}`;
     
-    // Log the request with full URL
     logApiRequest('GET', fullUrl, {
       client_name: body.client_name,
       product_name: body.product_name
@@ -41,7 +41,6 @@ export async function POST(request: Request) {
 
     console.time('API Call Duration');
     
-    // Make GET request instead of POST since we're using query parameters
     const response = await fetch(fullUrl, {
       method: 'GET',
     });

@@ -141,7 +141,6 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       product_name: selectedProductDetails.title
     };
   
-    // Log the request details
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
     console.log('👤 Client Name:', clientName);
@@ -151,8 +150,8 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     try {
       console.time('Invoice Generation Duration');
       
-      // Still use POST to our Next.js API route, which will make the GET request to the external API
-      const response = await fetch('/api/generate-invoice', {
+      // Updated URL path
+      const response = await fetch('/generate-invoice', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
