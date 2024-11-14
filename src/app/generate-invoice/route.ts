@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
   try {
-    // Get query parameters from the request URL
     const url = new URL(request.url);
     const clientName = url.searchParams.get('client_name');
     const productName = url.searchParams.get('product_name');
@@ -16,9 +15,20 @@ export async function POST(request: Request) {
     }
 
     const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
+
+    // Encode parameters properly
+    const encodeParam = (str: string) => {
+      return str.split('').map(char => {
+        switch(char) {
+          case ' ': return '%20';
+          case '[': return '%5B';
+          case ']': return '%5D';
+          default: return char;
+        }
+      }).join('');
+    };
     
-    // Direct URL construction with proper single encoding
-    const fullUrl = `${BASE_URL}?client_name=${clientName.replace(/ /g, '%20')}&product_name=${productName.replace(/ /g, '%20')}`;
+    const fullUrl = `${BASE_URL}?client_name=${encodeParam(clientName)}&product_name=${encodeParam(productName)}`;
     
     console.log('🔗 Requesting URL:', fullUrl);
 

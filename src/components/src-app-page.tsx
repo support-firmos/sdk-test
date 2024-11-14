@@ -135,12 +135,16 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    // Single encode the parameters with proper space handling
+    // Single encode the parameters with proper space and bracket handling
     const encodeParam = (str: string) => {
-      return str
-        .replace(/\[/g, '%5B')
-        .replace(/\]/g, '%5D')
-        .replace(/ /g, '%20');
+      return str.split('').map(char => {
+        switch(char) {
+          case ' ': return '%20';
+          case '[': return '%5B';
+          case ']': return '%5D';
+          default: return char;
+        }
+      }).join('');
     };
   
     const url = `/generate-invoice?client_name=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
