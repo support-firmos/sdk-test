@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server'
 
-// Logger function for development
-const logApiRequest = (method: string, url: string, body: any, headers: any) => {
+const logApiRequest = (method: string, url: string, params: any) => {
   console.group('🌐 API Request Details');
   console.log('📍 Method:', method);
-  console.log('🔗 URL:', url);
-  console.log('📦 Request Body:', body);
-  console.log('📋 Headers:', headers);
+  console.log('🔗 Full URL:', url);
+  console.log('🔍 Query Parameters:', params);
   console.groupEnd();
 };
 
@@ -22,31 +20,36 @@ const logApiResponse = (status: number, data: any, error?: any) => {
 };
 
 export async function POST(request: Request) {
-  const API_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
+  const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
   
   try {
     const body = await request.json();
     
-    // Log the incoming request
-    logApiRequest('POST', API_URL, body, {
-      'Content-Type': 'application/json',
+    // Create URL with query parameters
+    const params = new URLSearchParams({
+      client_name: body.client_name,
+      product_name: body.product_name
+    });
+    
+    const fullUrl = `${BASE_URL}?${params.toString()}`;
+    
+    // Log the request with full URL
+    logApiRequest('GET', fullUrl, {
+      client_name: body.client_name,
+      product_name: body.product_name
     });
 
     console.time('API Call Duration');
     
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body)
+    // Make GET request instead of POST since we're using query parameters
+    const response = await fetch(fullUrl, {
+      method: 'GET',
     });
 
     console.timeEnd('API Call Duration');
 
     const data = await response.json();
     
-    // Log the API response
     logApiResponse(response.status, data);
 
     if (!response.ok) {
@@ -55,7 +58,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json(data);
   } catch (error) {
-    // Log any errors
     logApiResponse(500, null, error);
     
     return NextResponse.json(

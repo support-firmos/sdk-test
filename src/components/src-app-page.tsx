@@ -135,7 +135,8 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    const requestBody = {
+    // Create query parameters
+    const params = {
       client_name: clientName,
       product_name: selectedProductDetails.title
     };
@@ -144,25 +145,25 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
     console.log('👤 Client Name:', clientName);
-    console.log('📦 Request Payload:', requestBody);
+    console.log('🔍 Query Parameters:', params);
     console.groupEnd();
   
     try {
       console.time('Invoice Generation Duration');
       
+      // Still use POST to our Next.js API route, which will make the GET request to the external API
       const response = await fetch('/api/generate-invoice', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(params)
       });
   
       console.timeEnd('Invoice Generation Duration');
   
       const data = await response.json();
   
-      // Log the response
       console.group('📥 Invoice Generation Response');
       console.log('📊 Status:', response.status);
       console.log('📄 Response Data:', data);
@@ -186,7 +187,6 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       }, LOADING_DELAY / loadingMessages.length);
   
     } catch (err) {
-      // Log the error
       console.group('❌ Invoice Generation Error');
       console.error('Error Details:', err);
       console.trace('Error Stack Trace:');
