@@ -135,24 +135,27 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
       : sessionData.company?.name || "Unknown Client";
   
-    // Create properly encoded URL parameters with %20 for spaces
-    const encodeWithSpaces = (str: string) => {
-      return encodeURIComponent(str).replace(/%20|\+/g, '%20');
+    // Prepare the request body
+    const requestBody = {
+      client_name: clientName,
+      product_name: selectedProductDetails.title
     };
-  
-    const url = `/generate-invoice?client_name=${encodeWithSpaces(clientName)}&product_name=${encodeWithSpaces(selectedProductDetails.title)}`;
   
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
     console.log('👤 Client Name:', clientName);
-    console.log('🔗 Full URL:', url);
+    console.log('📦 Request Body:', requestBody);
     console.groupEnd();
   
     try {
       console.time('Invoice Generation Duration');
       
-      const response = await fetch(url, {
-        method: 'GET',
+      const response = await fetch('/generate-invoice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
       });
   
       console.timeEnd('Invoice Generation Duration');

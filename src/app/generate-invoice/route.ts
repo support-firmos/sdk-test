@@ -1,31 +1,35 @@
+// src/app/generate-invoice/route.ts
 import { NextResponse } from 'next/server'
 
-const encodeWithSpaces = (str: string) => {
-  return encodeURIComponent(str).replace(/%20|\+/g, '%20');
-};
-
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
-  const clientName = searchParams.get('client_name');
-  const productName = searchParams.get('product_name');
-
-  if (!clientName || !productName) {
-    return NextResponse.json(
-      { error: 'Missing required parameters' },
-      { status: 400 }
-    );
-  }
-
-  const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
-  
+export async function POST(request: Request) {
   try {
-    // Create properly encoded URL with %20 for spaces
-    const fullUrl = `${BASE_URL}?client_name=${encodeWithSpaces(clientName)}&product_name=${encodeWithSpaces(productName)}`;
+    const body = await request.json();
+    const { client_name, product_name } = body;
+
+    if (!client_name || !product_name) {
+      return NextResponse.json(
+        { error: 'Missing required parameters' },
+        { status: 400 }
+      );
+    }
+
+    const BASE_URL = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
+    
+    // Create URL parameters
+    const params = new URLSearchParams({
+      client_name,
+      product_name
+    }).toString();
+
+    const fullUrl = `${BASE_URL}?${params}`;
     
     console.log('🔗 Requesting URL:', fullUrl);
 
     const response = await fetch(fullUrl, {
-      method: 'GET',
+      method: 'GET', // Keep this as GET since the external API expects GET
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     const data = await response.json();
