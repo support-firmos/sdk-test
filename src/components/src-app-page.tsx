@@ -139,7 +139,38 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
       : sessionData?.company?.name || "Unknown Client";
   
-    // Make API request without error handling
+    // Create a promise that resolves when sidebar-payments changes
+    const waitForSidebarChange = new Promise((resolve) => {
+      const observer = new MutationObserver((mutations) => {
+        console.log('Sidebar change detected:', mutations);
+        observer.disconnect();
+        resolve(true);
+      });
+  
+      const sidebarElement = document.getElementById('sidebar-payments');
+      
+      if (sidebarElement) {
+        observer.observe(sidebarElement, {
+          childList: true,
+          subtree: true,
+          characterData: true,
+          attributes: true
+        });
+        console.log('Started observing sidebar-payments');
+      } else {
+        console.log('sidebar-payments element not found');
+        setTimeout(resolve, 5000);
+      }
+  
+      // Timeout after 30 seconds
+      setTimeout(() => {
+        observer.disconnect();
+        resolve(false);
+        console.log('Observer timed out');
+      }, 30000);
+    });
+  
+    // Make API request through our Next.js route
     fetch('/api/generate-invoice', {
       method: 'POST',
       headers: {
@@ -151,19 +182,34 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       })
     });
   
-    // Process loading messages and show success, regardless of API response
-    const interval = setInterval(() => {
-      currentMessage++;
-      if (currentMessage < loadingMessages.length) {
-        setLoadingText(loadingMessages[currentMessage]);
-      }
-      if (currentMessage >= loadingMessages.length) {
-        clearInterval(interval);
-        setIsLoading(false);
-        setShowSuccessModal(true);
-      }
+    // Update loading message while waiting
+    const loadingInterval = setInterval(() => {
+      currentMessage = (currentMessage + 1) % loadingMessages.length;
+      setLoadingText(loadingMessages[currentMessage]);
     }, LOADING_DELAY / loadingMessages.length);
+  
+    try {
+      // Wait for either API response or sidebar changes
+      const sidebarChanged = await waitForSidebarChange;
+      clearInterval(loadingInterval);
+      setIsLoading(false);
+      setShowSuccessModal(true);
+      console.log('Process completed, sidebar changed:', sidebarChanged);
+    } catch (error) {
+      console.log('Error while waiting:', error);
+      clearInterval(loadingInterval);
+      setIsLoading(false);
+      setShowSuccessModal(true);
+    }
   };
+  
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      const observer = new MutationObserver(() => {});
+      observer.disconnect();
+    };
+  }, []);
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)

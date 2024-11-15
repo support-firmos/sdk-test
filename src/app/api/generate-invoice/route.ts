@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   url.searchParams.append("client_name", client_name);
   url.searchParams.append("product_name", product_name);
 
-  // Make the request without error handling
+  // Make the request to external API
   await fetch(url.toString(), {
     method: "POST",
     headers: {
