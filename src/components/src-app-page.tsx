@@ -134,52 +134,35 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       return;
     }
   
-    try {
-      // Construct the client name
-      const clientName = sessionData?.client 
-        ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-        : sessionData?.company?.name || "Unknown Client";
+    // Construct the client name
+    const clientName = sessionData?.client 
+      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
+      : sessionData?.company?.name || "Unknown Client";
   
-      console.log('Generating invoice for:', {
-        clientName,
-        productName: selectedProductDetails.title
-      });
+    // Make API request without error handling
+    fetch('/api/generate-invoice', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        client_name: clientName,
+        product_name: selectedProductDetails.title
+      })
+    });
   
-      const response = await fetch('/api/generate-invoice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          client_name: clientName,
-          product_name: selectedProductDetails.title
-        })
-      });
-  
-      const result = await response.json();
-  
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to generate invoice');
+    // Process loading messages and show success, regardless of API response
+    const interval = setInterval(() => {
+      currentMessage++;
+      if (currentMessage < loadingMessages.length) {
+        setLoadingText(loadingMessages[currentMessage]);
       }
-  
-      // Process loading messages and show success
-      const interval = setInterval(() => {
-        currentMessage++;
-        if (currentMessage < loadingMessages.length) {
-          setLoadingText(loadingMessages[currentMessage]);
-        }
-        if (currentMessage >= loadingMessages.length) {
-          clearInterval(interval);
-          setIsLoading(false);
-          setShowSuccessModal(true);
-        }
-      }, LOADING_DELAY / loadingMessages.length);
-  
-    } catch (err) {
-      console.error('Error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setIsLoading(false);
-    }
+      if (currentMessage >= loadingMessages.length) {
+        clearInterval(interval);
+        setIsLoading(false);
+        setShowSuccessModal(true);
+      }
+    }, LOADING_DELAY / loadingMessages.length);
   };
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
