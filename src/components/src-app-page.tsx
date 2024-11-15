@@ -167,7 +167,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         observer.disconnect();
         resolve(false);
         console.log('Observer timed out');
-      }, 30000);
+      }, 100000);
     });
   
     // Make API request through our Next.js route
