@@ -140,6 +140,11 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
         : sessionData?.company?.name || "Unknown Client";
   
+      console.log('Sending request with:', {
+        client_name: clientName,
+        product_name: selectedProductDetails.title
+      });
+  
       // Make the API request
       const response = await fetch('/api/generate-invoice', {
         method: 'POST',
@@ -154,9 +159,14 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   
       const result = await response.json();
   
+      // Log the complete response for debugging
+      console.log('API Response:', result);
+  
       // Check the success flag in the response
       if (!result.success) {
-        throw new Error(result.error || 'Failed to generate invoice');
+        const errorMessage = result.error || 'Failed to generate invoice';
+        console.error('Error details:', result.details);
+        throw new Error(errorMessage);
       }
   
       // Process loading messages
@@ -176,6 +186,8 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       console.error('Error generating invoice:', err);
       setError(err instanceof Error ? err.message : 'An error occurred while generating the invoice');
       setIsLoading(false);
+    } finally {
+      // Optional: Add cleanup code here if needed
     }
   };
 

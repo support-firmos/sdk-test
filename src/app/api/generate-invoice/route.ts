@@ -15,7 +15,6 @@ export async function POST(request: Request) {
     // Validate required fields
     if (!client_name || !product_name) {
       console.log('❌ Validation Error: Missing required parameters');
-      // Return 200 with error info in response body
       return NextResponse.json({
         success: false,
         error: 'Missing required parameters'
@@ -24,10 +23,18 @@ export async function POST(request: Request) {
 
     const url = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
     
+    // Create the properly formatted request body
+    const requestBody = {
+        params: {
+            client_name: client_name,
+            product_name: product_name
+        }
+    };
+
     console.log('🔄 Making request to external API:', {
       url,
       method: 'POST',
-      body: { client_name, product_name }
+      body: requestBody
     });
 
     const response = await fetch(url, {
@@ -36,17 +43,14 @@ export async function POST(request: Request) {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
-      body: JSON.stringify({
-        client_name,
-        product_name
-      })
+      body: JSON.stringify(requestBody)
     });
 
     const data = await response.json();
     console.log('📥 External API Response:', data);
 
     if (!response.ok) {
-      // Return 200 with error info
+      // Return error info
       return NextResponse.json({
         success: false,
         error: `Failed to process request: ${response.status}`,
@@ -66,7 +70,6 @@ export async function POST(request: Request) {
       stack: error instanceof Error ? error.stack : undefined
     });
     
-    // Return 200 with error info
     return NextResponse.json({
       success: false,
       error: 'Failed to generate invoice',
