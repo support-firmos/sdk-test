@@ -134,43 +134,30 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       return;
     }
   
-
     // Construct the client name
     const clientName = sessionData.client 
       ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
       : sessionData.company?.name || "Unknown Client";
-
-    // const clientName = "Earyl Buque" //static code for testing
   
     try {
-      const url = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
-      
-      // Create request body
-      const requestBody = {
-        client_name: clientName,
-        product_name: selectedProductDetails.title
-      };
-      
-      console.group('📡 Invoice Generation Request');
-      console.log('🔗 Request URL:', url);
-      console.log('📦 Request Body:', requestBody);
-      
-      const response = await fetch(url, {
+      // Use the new API route
+      const response = await fetch('/api/generate-invoice', {
         method: 'POST',
         headers: {
-          'accept': 'application/json',
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify({
+          client_name: clientName,
+          product_name: selectedProductDetails.title
+        }),
+        // Add cache control headers
+        cache: 'no-store'
       });
   
       const data = await response.json();
-      
-      console.log('📄 Response Data:', data);
-      console.groupEnd();
   
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
+        throw new Error(data.error || 'Failed to generate invoice');
       }
   
       // Process loading messages
