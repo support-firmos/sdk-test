@@ -135,7 +135,7 @@ export function BlockPage() {
     //   ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
     //   : sessionData.company?.name || "Unknown Client";
     
-      const clientName = "Earyl Buque"
+      const clientName = "Ralph Estor"
 
 
     // Single encode the parameters with proper space and bracket handling
@@ -430,7 +430,8 @@ export function BlockPage() {
               <a
               // Sample Implementation
                 // href={invoiceurl}
-                href='https://app.firmos.ai/invoices/pay?invoiceId='
+                // href='https://app.firmos.ai/invoices/pay?invoiceId='
+                href='https://app.firmos.ai/invoices/'
                 className="text-blue-500 hover:text-blue-600 transition-colors"
                 onClick={handleInvoiceClick}
                 target="_blank"
