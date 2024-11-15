@@ -135,15 +135,10 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   
     try {
-      console.log('Starting invoice generation...');
-      
       // Construct the client name
       const clientName = sessionData?.client 
         ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
         : sessionData?.company?.name || "Unknown Client";
-  
-      console.log('Client Name:', clientName);
-      console.log('Product Details:', selectedProductDetails);
   
       // Make the API request
       const response = await fetch('/api/generate-invoice', {
@@ -157,16 +152,11 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         })
       });
   
-      // Log response status
-      console.log('Response status:', response.status);
-      
-      const data = await response.json();
-      console.log('Response data:', data);
+      const result = await response.json();
   
-      if (!response.ok) {
-        // Check if we have a detailed error message from the server
-        const errorMessage = data.error || data.details || 'Failed to generate invoice';
-        throw new Error(errorMessage);
+      // Check the success flag in the response
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to generate invoice');
       }
   
       // Process loading messages
