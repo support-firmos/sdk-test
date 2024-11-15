@@ -134,7 +134,13 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       return;
     }
   
-    const clientName = "Earyl Buque"
+
+    // Construct the client name
+    const clientName = sessionData.client 
+      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
+      : sessionData.company?.name || "Unknown Client";
+
+    // const clientName = "Earyl Buque" //static code for testing
   
     try {
       const url = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
