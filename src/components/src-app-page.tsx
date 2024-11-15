@@ -1,3 +1,5 @@
+"use client"
+
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -6,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Check, Info } from 'lucide-react'
+import { toast, useToast } from "@/hooks/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -25,21 +28,20 @@ type SessionData = {
   };
 };
 
-const API_BASE_URL = "https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice"
-
 export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [progress, setProgress] = useState(0)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
+  
 
-  const LOADING_DELAY = 7000
+  const LOADING_DELAY = 7000;
   const loadingMessages = [
-    "Generating invoice...",
-    "Processing payment details...",
-    "Finalizing your invoice...",
+    "Getting things ready...",
+    "Calculating totals...",
     "Almost there!"
   ]
 
@@ -115,96 +117,85 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
 
   const handleSelectPackage = async () => {
     if (!selectedProduct) {
-      setError("Please select a package first");
-      return;
+      setError("Please select a package first")
+      return
     }
   
-    setIsLoading(true);
-    setError(null);
-    let currentMessage = 0;
-    setLoadingText(loadingMessages[currentMessage]);
+    setIsProcessing(true)
+    setProgress(0)
+    setError(null)
+    let currentMessage = 0
+    setLoadingText(loadingMessages[currentMessage])
   
     // Get the selected product details
-    const selectedProductDetails = products.find(p => p.id === selectedProduct);
+    const selectedProductDetails = products.find(p => p.id === selectedProduct)
     if (!selectedProductDetails) {
-      setError("Selected product not found");
-      setIsLoading(false);
-      return;
+      setError("Selected product not found")
+      setIsProcessing(false)
+      return
     }
-  
-    // Construct the client name
-    const clientName = sessionData.client 
-      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-      : sessionData.company?.name || "Unknown Client";
-  
-    // Single encode the parameters with proper space and bracket handling
-    const encodeParam = (str: string) => {
-      return str.split('').map(char => {
-        switch(char) {
-          case ' ': return '%20';
-          case '[': return '%5B';
-          case ']': return '%5D';
-          default: return char;
-        }
-      }).join('');
-    };
-  
-    const url = `/generate-invoice?client_name=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
-  
-    console.group('📡 Invoice Generation Request');
-    console.log('🏷️ Selected Product:', selectedProductDetails);
-    console.log('👤 Client Name:', clientName);
-    console.log('🔗 Full URL:', url);
-    console.groupEnd();
   
     try {
-      console.time('Invoice Generation Duration');
-      
-      const response = await fetch(url, {
-        method: 'POST',
+      // Start progress animation
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => Math.min(prev + 5, 90))
+      }, 500)
+  
+      // Message rotation interval
+      const messageInterval = setInterval(() => {
+        currentMessage = (currentMessage + 1) % loadingMessages.length
+        setLoadingText(loadingMessages[currentMessage])
+      }, LOADING_DELAY / loadingMessages.length)
+  
+      // Construct the client name from session data
+      const clientName = sessionData?.client 
+        ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
+        : sessionData?.company?.name || "Unknown Client"
+  
+      const params = new URLSearchParams({
+        client_name: clientName,
+        product_name: selectedProductDetails.title
+      }).toString()
+  
+      const response = await fetch(`https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice?${params}`, {
+        method: "POST",
         headers: {
-          'accept': 'application/json'
-        },
-        body: ''
-      });
+          'accept': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      })
   
-      console.timeEnd('Invoice Generation Duration');
-  
-      const data = await response.json();
-  
-      console.group('📥 Invoice Generation Response');
-      console.log('📊 Status:', response.status);
-      console.log('📄 Response Data:', data);
-      console.groupEnd();
+      clearInterval(progressInterval)
+      clearInterval(messageInterval)
+      setProgress(100)
   
       if (!response.ok) {
-        throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
+        const errorData = await response.json()
+        throw new Error(errorData.detail || "Failed to process request")
       }
   
-      // Process loading messages
-      const interval = setInterval(() => {
-        currentMessage++;
-        if (currentMessage < loadingMessages.length) {
-          setLoadingText(loadingMessages[currentMessage]);
-        }
-        if (currentMessage >= loadingMessages.length) {
-          clearInterval(interval);
-          setIsLoading(false);
-          setShowSuccessModal(true);
-        }
-      }, LOADING_DELAY / loadingMessages.length);
+      const data = await response.json()
+      
+      toast({
+        title: "Success",
+        description: "Invoice generated successfully!",
+      })
+      setShowSuccessModal(true)
   
-    } catch (err) {
-      console.group('❌ Invoice Generation Error');
-      console.error('Error Details:', err);
-      console.trace('Error Stack Trace:');
-      console.groupEnd();
-  
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setIsLoading(false);
+    } catch (error) {
+      console.error("Error:", error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to process request. Please try again.",
+        variant: "destructive",
+      })
+      setError(error instanceof Error ? error.message : "Failed to process request")
+    } finally {
+      setIsProcessing(false)
     }
-  };
-  
+  }
+
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
@@ -222,7 +213,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         </div>
       )}
       <AnimatePresence>
-        {isLoading && (
+        {isProcessing && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
