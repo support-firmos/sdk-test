@@ -157,14 +157,22 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         })
       });
   
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        throw new Error('Invalid response from server');
+      }
   
       // Log the complete response for debugging
       console.log('API Response:', result);
   
       // Check the success flag in the response
       if (!result.success) {
-        const errorMessage = result.error || 'Failed to generate invoice';
+        const errorMessage = typeof result.error === 'string' 
+          ? result.error 
+          : 'Failed to generate invoice';
         console.error('Error details:', result.details);
         throw new Error(errorMessage);
       }
@@ -187,7 +195,10 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       setError(err instanceof Error ? err.message : 'An error occurred while generating the invoice');
       setIsLoading(false);
     } finally {
-      // Optional: Add cleanup code here if needed
+      // Reset loading state if something went wrong
+      if (isLoading) {
+        setIsLoading(false);
+      }
     }
   };
 

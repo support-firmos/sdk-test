@@ -38,18 +38,46 @@ export async function POST(request: Request) {
       headers: {
         'accept': 'application/json'
       },
-      // Send empty body as shown in the curl example
       body: ''
     });
 
-    const data = await response.json();
-    console.log('📥 External API Response:', data);
-
+    // First check if the response is ok
     if (!response.ok) {
+      const errorText = await response.text(); // Get response as text first
+      console.error('Error response:', errorText);
+      
+      let errorDetails;
+      try {
+        // Try to parse as JSON if possible
+        errorDetails = JSON.parse(errorText);
+      } catch {
+        // If not JSON, use the text directly
+        errorDetails = errorText;
+      }
+
       return NextResponse.json({
         success: false,
         error: `Failed to process request: ${response.status}`,
-        details: data
+        details: errorDetails
+      });
+    }
+
+    // Try to parse the successful response
+    let data;
+    try {
+      const responseText = await response.text();
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        // If response is not JSON, create a simple success object
+        data = { message: responseText };
+      }
+    } catch (parseError) {
+      console.error('Error parsing response:', parseError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to parse response',
+        details: 'Invalid response format'
       });
     }
 
