@@ -28,11 +28,11 @@ type SessionData = {
   };
 };
 
+// export function BlockPage() {
 export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [progress, setProgress] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
@@ -117,85 +117,75 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
 
   const handleSelectPackage = async () => {
     if (!selectedProduct) {
-      setError("Please select a package first")
-      return
+      setError("Please select a package first");
+      return;
     }
   
-    setIsProcessing(true)
-    setProgress(0)
-    setError(null)
-    let currentMessage = 0
-    setLoadingText(loadingMessages[currentMessage])
+    setIsLoading(true);
+    setError(null);
+    let currentMessage = 0;
+    setLoadingText(loadingMessages[currentMessage]);
   
     // Get the selected product details
-    const selectedProductDetails = products.find(p => p.id === selectedProduct)
+    const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
-      setError("Selected product not found")
-      setIsProcessing(false)
-      return
+      setError("Selected product not found");
+      setIsLoading(false);
+      return;
     }
+  
+    const clientName = "Earyl Buque"
   
     try {
-      // Start progress animation
-      const progressInterval = setInterval(() => {
-        setProgress((prev) => Math.min(prev + 5, 90))
-      }, 500)
-  
-      // Message rotation interval
-      const messageInterval = setInterval(() => {
-        currentMessage = (currentMessage + 1) % loadingMessages.length
-        setLoadingText(loadingMessages[currentMessage])
-      }, LOADING_DELAY / loadingMessages.length)
-  
-      // Construct the client name from session data
-      const clientName = sessionData?.client 
-        ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-        : sessionData?.company?.name || "Unknown Client"
-  
-      const params = new URLSearchParams({
+      const url = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
+      
+      // Create request body
+      const requestBody = {
         client_name: clientName,
         product_name: selectedProductDetails.title
-      }).toString()
-  
-      const response = await fetch(`https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice?${params}`, {
-        method: "POST",
+      };
+      
+      console.group('📡 Invoice Generation Request');
+      console.log('🔗 Request URL:', url);
+      console.log('📦 Request Body:', requestBody);
+      
+      const response = await fetch(url, {
+        method: 'POST',
         headers: {
           'accept': 'application/json',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        }
-      })
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(requestBody)
+      });
   
-      clearInterval(progressInterval)
-      clearInterval(messageInterval)
-      setProgress(100)
+      const data = await response.json();
+      
+      console.log('📄 Response Data:', data);
+      console.groupEnd();
   
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || "Failed to process request")
+        throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
       }
   
-      const data = await response.json()
-      
-      toast({
-        title: "Success",
-        description: "Invoice generated successfully!",
-      })
-      setShowSuccessModal(true)
+      // Process loading messages
+      const interval = setInterval(() => {
+        currentMessage++;
+        if (currentMessage < loadingMessages.length) {
+          setLoadingText(loadingMessages[currentMessage]);
+        }
+        if (currentMessage >= loadingMessages.length) {
+          clearInterval(interval);
+          setIsLoading(false);
+          setShowSuccessModal(true);
+        }
+      }, LOADING_DELAY / loadingMessages.length);
   
-    } catch (error) {
-      console.error("Error:", error)
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to process request. Please try again.",
-        variant: "destructive",
-      })
-      setError(error instanceof Error ? error.message : "Failed to process request")
-    } finally {
-      setIsProcessing(false)
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred');
+      setIsLoading(false);
     }
-  }
-
+  };
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
@@ -213,7 +203,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         </div>
       )}
       <AnimatePresence>
-        {isProcessing && (
+        {isLoading && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
