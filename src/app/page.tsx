@@ -18,7 +18,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
       <BlockPage sessionData={{
         client: data.client ? {
           givenName: data.client.givenName || '',
-          lastName: data.client.familyName || ''  // Map familyName to lastName
+          familyName: data.client.familyName || ''  // Map familyName to lastName
         } : undefined,
         company: data.company ? {
           name: data.company.name || ''  // Ensure name is a non-nullable string

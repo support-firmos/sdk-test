@@ -18,13 +18,14 @@ import {
 type SessionData = {
   client?: {
     givenName: string;
-    lastName: string;
+    familyName: string;
   };
   company?: {
     name: string;
   };
 };
 
+const API_BASE_URL = "https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice"
 
 export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
@@ -34,10 +35,11 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
 
-  const LOADING_DELAY = 7000;
+  const LOADING_DELAY = 7000
   const loadingMessages = [
-    "Getting things ready...",
-    "Calculating totals...",
+    "Generating invoice...",
+    "Processing payment details...",
+    "Finalizing your invoice...",
     "Almost there!"
   ]
 
@@ -132,7 +134,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   
     // Construct the client name
     const clientName = sessionData.client 
-      ? `${sessionData.client.givenName} ${sessionData.client.lastName}`
+      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
       : sessionData.company?.name || "Unknown Client";
   
     // Single encode the parameters with proper space and bracket handling
