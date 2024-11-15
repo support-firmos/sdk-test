@@ -1,11 +1,10 @@
 'use client'
-
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Badge } from "@/components/ui/badge"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Check, Info } from 'lucide-react'
+import { Check, Info, MousePointerClick } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,7 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
 // Add these new types
 type SessionData = {
   client?: {
@@ -24,9 +22,8 @@ type SessionData = {
     name: string;
   };
 };
-
 export function BlockPage() {
-// export function BlockPage({ sessionData }: { sessionData: SessionData }) {
+  // export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -34,7 +31,7 @@ export function BlockPage() {
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
 
-  const LOADING_DELAY = 7000;
+  const LOADING_DELAY = 7000; // 7 seconds
   const loadingMessages = [
     "Getting things ready...",
     "Calculating totals...",
@@ -74,7 +71,7 @@ export function BlockPage() {
       heading: 'FIRMOS GROWTH PLATFORM',
       subtitle: 'Core Focus',
       description: '(1 Pillar)',
-      fullDescription: 'Focus on one core area of your firm\'s operations. Whether you\'re looking to enhance lead generation, streamline talent management, or improve client delivery. FirmOS provides a tailored solution for your chosen pillar.',
+      fullDescription: 'Focus on one core area of your firm\'s operations. Whether you\'re looking to enhance lead generation, streamline talent management, improve client delivery, or optimize financial processes, FirmOS provides a tailored solution for your chosen pillar.',
       price: 2450,
       savings: null
     },
@@ -84,17 +81,17 @@ export function BlockPage() {
       heading: 'FIRMOS BUSINESS ACCELERATOR',
       subtitle: 'Dual Focus',
       description: '(2 Pillars)',
-      fullDescription: 'Optimize two critical aspects of your firm\'s operations. Choose the combination that fits your current needs—whether it\'s increasing client acquisition and improving internal efficiency, or client fulfillment.',
+      fullDescription: 'Optimize two critical aspects of your firm\'s operations. Choose the combination that fits your current needs—whether it\'s increasing client acquisition and improving internal efficiency, or enhancing financial control and client fulfillment.',
       price: 3450,
       savings: 30
     },
     {
       id: 'mastery',
-      title: 'FirmOS Operations Mastery (4 Pillars) - $4,950 (50% Savings)',
+      title: 'FirmOS Operations Mastery (3 Pillars) - $4,450 (40% Savings)',
       heading: 'FIRMOS OPERATIONS MASTERY',
       subtitle: 'Complete Solution',
-      description: '(4 Pillars)',
-      fullDescription: 'Full operational support across Business Development, Talent, and Fulfillment . FirmOS equips you with a complete solution to manage and scale your firm efficiently, ensuring alignment across all key functions.',
+      description: '(3 Pillars)',
+      fullDescription: 'Full operational support across Business Development, Talent, Fulfillment, and Finance. FirmOS equips you with a complete solution to manage and scale your firm efficiently, ensuring alignment across all key functions.',
       price: 4450,
       savings: 40
     },
@@ -111,101 +108,104 @@ export function BlockPage() {
     }
   ]
 
-  const handleSelectPackage = async () => {
+  const handleSelectPackage = async () => { 
+    // Check if a product is selected
     if (!selectedProduct) {
-      setError("Please select a package first");
-      return;
+        setError("Please select a package first");
+        return;
     }
-  
+
     setIsLoading(true);
     setError(null);
     let currentMessage = 0;
     setLoadingText(loadingMessages[currentMessage]);
-  
+
     // Get the selected product details
     const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
-      setError("Selected product not found");
-      setIsLoading(false);
-      return;
+        setError("Selected product not found");
+        setIsLoading(false);
+        return;
     }
-  
-    // Construct the client name
+
+     // Construct the client name
     // const clientName = sessionData.client 
     //   ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
     //   : sessionData.company?.name || "Unknown Client";
-    
-      const clientName = "Earyl Buque"
-
+    const clientName = "Earyl Buque";
 
     // Single encode the parameters with proper space and bracket handling
-    const encodeParam = (str: string) => {
-      return str.split('').map(char => {
-        switch(char) {
-          case ' ': return '%20';
-          case '[': return '%5B';
-          case ']': return '%5D';
-          default: return char;
-        }
-      }).join('');
-    };
-  
+const encodeParam = (str: string) => {
+  return str.split('').map(char => {
+    switch(char) {
+      case ' ': return '%20';
+      case '[': return '%5B';
+      case ']': return '%5D';
+      case '(': return '%28';
+      case ',': return '%2C';
+      case ')': return '%29';
+      case '%': return '%25';
+      default: return char;
+    }
+  }).join('');
+};
+
     const url = `/generate-invoice?client_name=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
-  
+
     console.group('📡 Invoice Generation Request');
     console.log('🏷️ Selected Product:', selectedProductDetails);
     console.log('👤 Client Name:', clientName);
     console.log('🔗 Full URL:', url);
     console.groupEnd();
-  
+
     try {
-      console.time('Invoice Generation Duration');
-      
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'accept': 'application/json'
-        },
-        body: ''
-      });
-  
-      console.timeEnd('Invoice Generation Duration');
-  
-      const data = await response.json();
-  
-      console.group('📥 Invoice Generation Response');
-      console.log('📊 Status:', response.status);
-      console.log('📄 Response Data:', data);
-      console.groupEnd();
-  
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
-      }
-  
-      // Process loading messages
-      const interval = setInterval(() => {
-        currentMessage++;
-        if (currentMessage < loadingMessages.length) {
-          setLoadingText(loadingMessages[currentMessage]);
+        console.time('Invoice Generation Duration');
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'accept': 'application/json'
+            },
+            body: ''
+        });
+
+        console.timeEnd('Invoice Generation Duration');
+
+        const data = await response.json();
+
+        console.group('📥 Invoice Generation Response');
+        console.log('📊 Status:', response.status);
+        console.log('📄 Response Data:', data);
+        console.groupEnd();
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
         }
-        if (currentMessage >= loadingMessages.length) {
-          clearInterval(interval);
-          setIsLoading(false);
-          setShowSuccessModal(true);
-        }
-      }, LOADING_DELAY / loadingMessages.length);
-  
+
+        // Process loading messages
+        const interval = setInterval(() => {
+            currentMessage++;
+            if (currentMessage < loadingMessages.length) {
+                setLoadingText(loadingMessages[currentMessage]);
+            }
+            if (currentMessage >= loadingMessages.length) {
+                clearInterval(interval);
+                setIsLoading(false);
+                setShowSuccessModal(true);
+            }
+        }, LOADING_DELAY / loadingMessages.length);
+
     } catch (err) {
-      console.group('❌ Invoice Generation Error');
-      console.error('Error Details:', err);
-      console.trace('Error Stack Trace:');
-      console.groupEnd();
-  
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setIsLoading(false);
+        console.group('❌ Invoice Generation Error');
+        console.error('Error Details:', err);
+        console.trace('Error Stack Trace:');
+        console.groupEnd();
+
+        setError(err instanceof Error ? err.message : 'An error occurred');
+        setIsLoading(false);
     }
-  };
-  
+};
+
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
@@ -234,7 +234,6 @@ export function BlockPage() {
             className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50"
           >
             <div className="text-white text-center relative w-80 h-80">
-              {/* Outer rotating circle */}
               <motion.div
                 animate={{
                   rotate: 360,
@@ -247,7 +246,6 @@ export function BlockPage() {
                 className="absolute inset-0 border-4 border-blue-500 rounded-full"
               />
               
-              {/* Middle pulsing circle */}
               <motion.div
                 animate={{
                   scale: [1, 1.2, 1],
@@ -260,7 +258,6 @@ export function BlockPage() {
                 className="absolute inset-4 border-4 border-white rounded-full"
               />
               
-              {/* Inner stacked rectangles (logo-like) */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <motion.div
                   animate={{
@@ -300,7 +297,6 @@ export function BlockPage() {
                 />
               </div>
 
-              {/* Loading text positioned below animations */}
               <motion.div 
                 className="absolute -bottom-24 left-1/2 transform -translate-x-1/2 w-full"
                 animate={{
@@ -331,12 +327,16 @@ export function BlockPage() {
           </p>
         </header>
 
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {products.map((product) => (
             <motion.div
               key={product.id}
-              whileHover={{ scale: 1.03 }}
               className="relative h-full"
+              initial={{ scale: 1 }}
+              whileHover={{ scale: 1.03 }}
+              onHoverStart={() => setHoveredProduct(product.id)}
+              onHoverEnd={() => setHoveredProduct(null)}
             >
               {product.savings && (
                 <Badge 
@@ -355,7 +355,7 @@ export function BlockPage() {
                 onMouseLeave={() => setHoveredProduct(null)}
                 onClick={() => setSelectedProduct(product.id === selectedProduct ? null : product.id)}
               >
-                <CardHeader>
+                <CardHeader className="relative">
                   <CardTitle className="text-2xl font-bold text-white mb-2">
                     {product.heading}
                   </CardTitle>
@@ -363,6 +363,11 @@ export function BlockPage() {
                     <div className="text-blue-400 font-medium">{product.subtitle}</div>
                     <div className="text-gray-400">{product.description}</div>
                   </CardDescription>
+                  {selectedProduct === product.id && (
+                    <div className="absolute top-2 right-2 bg-blue-500 text-white px-2 py-1 rounded-full text-sm font-bold">
+                      Selected
+                    </div>
+                  )}
                 </CardHeader>
                 
                 <CardContent className="flex-1">
@@ -397,17 +402,33 @@ export function BlockPage() {
                 </CardContent>
 
                 <CardFooter className="mt-auto">
-                  <Button 
-                    className="w-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleSelectPackage()
-                    }}
-                  >
-                    Select Package
-                  </Button>
+                  {selectedProduct === product.id && (
+                    <Button 
+                      className="w-full bg-blue-500 hover:bg-blue-600 text-white transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSelectPackage()
+                      }}
+                    >
+                      Select Package
+                    </Button>
+                  )}
                 </CardFooter>
               </Card>
+              <AnimatePresence>
+                {hoveredProduct === product.id && selectedProduct !== product.id && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 20 }}
+                    className="absolute -top-12 left-1/2 transform -translate-x-1/2 bg-blue-600 text-white px-4 py-2 rounded-md shadow-lg"
+                    style={{ zIndex: 10 }}
+                  >
+                    <div className="text-sm font-semibold">Click to Choose</div>
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-3 h-3 bg-blue-600 rotate-45"></div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </div>
@@ -428,9 +449,10 @@ export function BlockPage() {
             </DialogHeader>
             <div className="mt-4">
               <a
-              // Sample Implementation
+                            // Sample Implementation
                 // href={invoiceurl}
-                href='https://app.firmos.ai/invoices/pay?invoiceId='
+                //href='https://app.firmos.ai/invoices/pay?invoiceId='
+                href="https://app.firmos.ai/invoices"
                 className="text-blue-500 hover:text-blue-600 transition-colors"
                 onClick={handleInvoiceClick}
                 target="_blank"
