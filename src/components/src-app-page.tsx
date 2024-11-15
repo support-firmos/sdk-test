@@ -134,13 +134,18 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       return;
     }
   
-    // Construct the client name
-    const clientName = sessionData.client 
-      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-      : sessionData.company?.name || "Unknown Client";
-  
     try {
-      // Use the new API route
+      console.log('Starting invoice generation...');
+      
+      // Construct the client name
+      const clientName = sessionData?.client 
+        ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
+        : sessionData?.company?.name || "Unknown Client";
+  
+      console.log('Client Name:', clientName);
+      console.log('Product Details:', selectedProductDetails);
+  
+      // Make the API request
       const response = await fetch('/api/generate-invoice', {
         method: 'POST',
         headers: {
@@ -149,15 +154,19 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         body: JSON.stringify({
           client_name: clientName,
           product_name: selectedProductDetails.title
-        }),
-        // Add cache control headers
-        cache: 'no-store'
+        })
       });
   
+      // Log response status
+      console.log('Response status:', response.status);
+      
       const data = await response.json();
+      console.log('Response data:', data);
   
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate invoice');
+        // Check if we have a detailed error message from the server
+        const errorMessage = data.error || data.details || 'Failed to generate invoice';
+        throw new Error(errorMessage);
       }
   
       // Process loading messages
@@ -174,8 +183,8 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       }, LOADING_DELAY / loadingMessages.length);
   
     } catch (err) {
-      console.error('Error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      console.error('Error generating invoice:', err);
+      setError(err instanceof Error ? err.message : 'An error occurred while generating the invoice');
       setIsLoading(false);
     }
   };
