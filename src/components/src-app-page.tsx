@@ -141,36 +141,68 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   
     // Create a promise that resolves when sidebar-payments changes
     const waitForSidebarChange = new Promise((resolve) => {
+      let initialValue: string | null = null;
+      
+      // Set up the mutation observer
       const observer = new MutationObserver((mutations) => {
-        console.log('Sidebar change detected:', mutations);
-        observer.disconnect();
-        resolve(true);
+        const paymentElement = document.getElementById('sidebar-payments');
+        const badgeElement = paymentElement?.querySelector('.jss132.jss112');
+        const currentValue = badgeElement?.textContent || '';
+        
+        console.log('Mutation detected:', {
+          initialValue,
+          currentValue,
+          mutations
+        });
+  
+        // If we have an initial value and it changed, or if we just got our first value
+        if (initialValue === null) {
+          initialValue = currentValue;
+        } else if (currentValue !== initialValue) {
+          console.log('Badge value changed:', {
+            from: initialValue,
+            to: currentValue
+          });
+          observer.disconnect();
+          resolve(true);
+        }
       });
   
+      // Get the sidebar element
       const sidebarElement = document.getElementById('sidebar-payments');
       
       if (sidebarElement) {
-        observer.observe(sidebarElement, {
-          childList: true,
-          subtree: true,
-          characterData: true,
-          attributes: true
+        // Store initial value
+        const badgeElement = sidebarElement.querySelector('.jss132.jss112');
+        initialValue = badgeElement?.textContent || '';
+        
+        console.log('Started observing sidebar-payments:', {
+          element: sidebarElement,
+          initialBadgeValue: initialValue
         });
-        console.log('Started observing sidebar-payments');
+  
+        // Configure the observer to watch for changes in the element and its descendants
+        observer.observe(sidebarElement, {
+          childList: true,      // Watch for changes in direct children
+          subtree: true,        // Watch for changes in all descendants
+          characterData: true,  // Watch for changes in text content
+          attributes: true      // Watch for changes in attributes
+        });
       } else {
         console.log('sidebar-payments element not found');
+        // If element doesn't exist, resolve after a short delay
         setTimeout(resolve, 5000);
       }
   
-      // Timeout after 30 seconds
+      // Cleanup: disconnect observer after 30 seconds (timeout)
       setTimeout(() => {
         observer.disconnect();
         resolve(false);
         console.log('Observer timed out');
-      }, 100000);
+      }, 30000);
     });
   
-    // Make API request through our Next.js route
+    // Make API request
     fetch('/api/generate-invoice', {
       method: 'POST',
       headers: {
@@ -182,34 +214,32 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       })
     });
   
-    // Update loading message while waiting
+    // Update loading message periodically
     const loadingInterval = setInterval(() => {
       currentMessage = (currentMessage + 1) % loadingMessages.length;
       setLoadingText(loadingMessages[currentMessage]);
     }, LOADING_DELAY / loadingMessages.length);
   
     try {
-      // Wait for either API response or sidebar changes
+      // Wait for sidebar changes
       const sidebarChanged = await waitForSidebarChange;
+      
+      // Clear the loading message interval
       clearInterval(loadingInterval);
+      
+      // If sidebar changed successfully or we timed out, show success modal
       setIsLoading(false);
       setShowSuccessModal(true);
-      console.log('Process completed, sidebar changed:', sidebarChanged);
+      
+      console.log('Process completed, badge changed:', sidebarChanged);
     } catch (error) {
-      console.log('Error while waiting:', error);
+      console.log('Error while waiting for sidebar:', error);
+      // Still proceed to success even if there was an error
       clearInterval(loadingInterval);
       setIsLoading(false);
       setShowSuccessModal(true);
     }
   };
-  
-  // Add cleanup on component unmount
-  useEffect(() => {
-    return () => {
-      const observer = new MutationObserver(() => {});
-      observer.disconnect();
-    };
-  }, []);
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
