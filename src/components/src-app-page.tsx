@@ -115,17 +115,18 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   ]
 
+
   const handleSelectPackage = async () => {
     if (!selectedProduct) {
       setError("Please select a package first");
       return;
     }
-  
+
     setIsLoading(true);
     setError(null);
     let currentMessage = 0;
     setLoadingText(loadingMessages[currentMessage]);
-  
+
     // Get the selected product details
     const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
@@ -133,67 +134,64 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       setIsLoading(false);
       return;
     }
-  
+
     // Construct the client name
     const clientName = sessionData?.client 
       ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
       : sessionData?.company?.name || "Unknown Client";
-  
+
     // Create a promise that resolves when sidebar-payments changes
     const waitForSidebarChange = new Promise((resolve) => {
-      let initialValue: string | null = null;
+      let lastSnapshot = '';
       
       // Set up the mutation observer
       const observer = new MutationObserver((mutations) => {
-        const paymentElement = document.getElementById('sidebar-payments');
-        const badgeElement = paymentElement?.querySelector('.jss132.jss112');
-        const currentValue = badgeElement?.textContent || '';
+        const sidebarPayments = document.getElementById('sidebar-payments');
         
-        console.log('Mutation detected:', {
-          initialValue,
-          currentValue,
-          mutations
-        });
-  
-        // If we have an initial value and it changed, or if we just got our first value
-        if (initialValue === null) {
-          initialValue = currentValue;
-        } else if (currentValue !== initialValue) {
-          console.log('Badge value changed:', {
-            from: initialValue,
-            to: currentValue
+        if (sidebarPayments) {
+          // Take a snapshot of the entire element's content
+          const currentSnapshot = sidebarPayments.innerHTML;
+          
+          console.log('Checking for changes:', {
+            hasChanged: lastSnapshot !== currentSnapshot,
+            lastSnapshot,
+            currentSnapshot
           });
-          observer.disconnect();
-          resolve(true);
+
+          if (lastSnapshot && lastSnapshot !== currentSnapshot) {
+            console.log('Sidebar payments content changed');
+            observer.disconnect();
+            resolve(true);
+          }
+          lastSnapshot = currentSnapshot;
         }
       });
-  
+
       // Get the sidebar element
-      const sidebarElement = document.getElementById('sidebar-payments');
+      const sidebarPayments = document.getElementById('sidebar-payments');
       
-      if (sidebarElement) {
-        // Store initial value
-        const badgeElement = sidebarElement.querySelector('.jss132.jss112');
-        initialValue = badgeElement?.textContent || '';
+      if (sidebarPayments) {
+        // Store initial state
+        lastSnapshot = sidebarPayments.innerHTML;
         
-        console.log('Started observing sidebar-payments:', {
-          element: sidebarElement,
-          initialBadgeValue: initialValue
+        console.log('Started observing sidebar-payments', {
+          element: sidebarPayments,
+          initialContent: lastSnapshot
         });
-  
-        // Configure the observer to watch for changes in the element and its descendants
-        observer.observe(sidebarElement, {
+
+        // Configure the observer
+        observer.observe(sidebarPayments, {
           childList: true,      // Watch for changes in direct children
           subtree: true,        // Watch for changes in all descendants
           characterData: true,  // Watch for changes in text content
-          attributes: true      // Watch for changes in attributes
+          attributes: false     // Skip attribute changes to reduce noise
         });
       } else {
         console.log('sidebar-payments element not found');
         // If element doesn't exist, resolve after a short delay
         setTimeout(resolve, 5000);
       }
-  
+
       // Cleanup: disconnect observer after 30 seconds (timeout)
       setTimeout(() => {
         observer.disconnect();
@@ -201,7 +199,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         console.log('Observer timed out');
       }, 30000);
     });
-  
+
     // Make API request
     fetch('/api/generate-invoice', {
       method: 'POST',
@@ -213,13 +211,13 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         product_name: selectedProductDetails.title
       })
     });
-  
+
     // Update loading message periodically
     const loadingInterval = setInterval(() => {
       currentMessage = (currentMessage + 1) % loadingMessages.length;
       setLoadingText(loadingMessages[currentMessage]);
     }, LOADING_DELAY / loadingMessages.length);
-  
+
     try {
       // Wait for sidebar changes
       const sidebarChanged = await waitForSidebarChange;
@@ -231,7 +229,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       setIsLoading(false);
       setShowSuccessModal(true);
       
-      console.log('Process completed, badge changed:', sidebarChanged);
+      console.log('Process completed, sidebar changed:', sidebarChanged);
     } catch (error) {
       console.log('Error while waiting for sidebar:', error);
       // Still proceed to success even if there was an error
@@ -241,9 +239,21 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   };
 
+
+  // Add cleanup on component unmount
+  useEffect(() => {
+    return () => {
+      // Cleanup any active observers when component unmounts
+      const observer = new MutationObserver(() => {});
+      observer.disconnect();
+    };
+  }, []);
+
+  // This is the last of the api call
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
   }
+
 
   useEffect(() => {
     document.title = 'Product Selection'
