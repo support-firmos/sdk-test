@@ -12,6 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+
+
 // Add these new types
 type SessionData = {
   client?: {
@@ -22,8 +24,10 @@ type SessionData = {
     name: string;
   };
 };
-export function BlockPage() {
-  // export function BlockPage({ sessionData }: { sessionData: SessionData }) {
+
+
+// export function BlockPage() {
+export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [hoveredProduct, setHoveredProduct] = useState<string | null>(null)
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -129,10 +133,11 @@ export function BlockPage() {
     }
 
      // Construct the client name
-    // const clientName = sessionData.client 
-    //   ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-    //   : sessionData.company?.name || "Unknown Client";
-    const clientName = "Earyl Buque";
+    const clientName = sessionData.client 
+      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
+      : sessionData.company?.name || "Unknown Client";
+      
+    // const clientName = "Earyl Buque";
 
     // Single encode the parameters with proper space and bracket handling
 const encodeParam = (str: string) => {
