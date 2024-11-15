@@ -21,36 +21,31 @@ export async function POST(request: Request) {
       });
     }
 
-    const url = 'https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice';
+    // Properly encode the query parameters
+    const encodedClientName = encodeURIComponent(client_name);
+    const encodedProductName = encodeURIComponent(product_name);
     
-    // Create the properly formatted request body
-    const requestBody = {
-        params: {
-            client_name: client_name,
-            product_name: product_name
-        }
-    };
-
+    // Construct URL with query parameters
+    const url = `https://firmos-copilot-autoinvoice-899783477192.us-central1.run.app/generate_invoice?client_name=${encodedClientName}&product_name=${encodedProductName}`;
+    
     console.log('🔄 Making request to external API:', {
       url,
-      method: 'POST',
-      body: requestBody
+      method: 'POST'
     });
 
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
+        'accept': 'application/json'
       },
-      body: JSON.stringify(requestBody)
+      // Send empty body as shown in the curl example
+      body: ''
     });
 
     const data = await response.json();
     console.log('📥 External API Response:', data);
 
     if (!response.ok) {
-      // Return error info
       return NextResponse.json({
         success: false,
         error: `Failed to process request: ${response.status}`,
