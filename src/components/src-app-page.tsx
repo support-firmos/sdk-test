@@ -35,6 +35,8 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
+  // Initialize contractUrl state
+  const [contractUrl, setContractUrl] = useState<string | null>(null);
 
   const LOADING_DELAY = 7000; // 7 seconds
   const loadingMessages = [
@@ -113,125 +115,88 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   ]
 
-  const handleSelectPackage = async () => { 
-    // Check if a product is selected
+  const handleSelectPackage = async () => {
     if (!selectedProduct) {
-        setError("Please select a package first");
-        return;
+      setError("Please select a package first");
+      return;
     }
-
+  
     setIsLoading(true);
     setError(null);
     let currentMessage = 0;
     setLoadingText(loadingMessages[currentMessage]);
-
-    // Get the selected product details
+  
     const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
-        setError("Selected product not found");
-        setIsLoading(false);
-        return;
+      setError("Selected product not found");
+      setIsLoading(false);
+      return;
     }
-
-     // Construct the client name
-    const clientName = sessionData.client 
-      ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-      : sessionData.company?.name || "Unknown Client";
-      
-    // const clientName = "Earyl Buque";
-
-    // Single encode the parameters with proper space and bracket handling
-    const encodeParam = (str: string) => {
-      return str.split('').map(char => {
-        switch(char) {
-          case ' ': return '%20';
-          case '[': return '%5B';
-          case ']': return '%5D';
-          case '(': return '%28';
-          case ',': return '%2C';
-          case ')': return '%29';
-          case '%': return '%25';
-          default: return char;
-        }
-      }).join('');
-    };
-
-    const url = `/generate-invoice?client_name=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
-
-    console.group('📡 Invoice Generation Request');
-    console.log('🏷️ Selected Product:', selectedProductDetails);
-    console.log('👤 Client Name:', clientName);
-    console.log('🔗 Full URL:', url);
-    console.groupEnd();
-
-    try {
-        console.time('Invoice Generation Duration');
-        
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-              'accept': 'application/json'
-          },
-          body: ''
-        });
-
-        console.timeEnd('Invoice Generation Duration');
-
-        // Log the raw response text first
-        const responseText = await response.text();
-        console.log('Raw Response:', responseText);
-
-        // Try to parse as JSON
-        let data;
-        try {
-            data = JSON.parse(responseText);
-        } catch (parseError) {
-            console.error('JSON Parse Error:', parseError);
-            console.error('Raw Response that failed to parse:', responseText);
-            throw new Error(`Failed to parse JSON response: ${responseText}`);
-        }
-
-        console.group('📥 Invoice Generation Response');
-        console.log('📊 Status:', response.status);
-        console.log('📄 Response Data:', data);
-        console.groupEnd();
-
+  
+    const clientName = `${sessionData.client?.givenName} ${sessionData.client?.familyName}`;
+    const recipientId = sessionData.client?.id || '5e0c8a63-c6ca-420d-9418-4465257bafc3';
+    const contractTemplateId = '7369088e-d5e2-4f2b-8452-56923d4c3c1e';
+  
+    // Reset the contract URL state
+    setContractUrl(null);
+  
+    // Function to send the contract
+    const sendContract = async () => {
+      const url = '/api/sendContract';
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientId,
+          contractTemplateId,
+        })
+      };
+  
+      try {
+        const response = await fetch(url, options);
+        const data = await response.json();
+        console.log("Contract", data);
+  
         if (!response.ok) {
-            throw new Error(`API error: ${response.status} - ${responseText}`);
+          throw new Error(`Contract API error: ${response.status} - ${JSON.stringify(data)}`);
         }
-
-        // Process loading messages
-        const interval = setInterval(() => {
-            currentMessage++;
-            if (currentMessage < loadingMessages.length) {
-                setLoadingText(loadingMessages[currentMessage]);
-            }
-            if (currentMessage >= loadingMessages.length) {
-                clearInterval(interval);
-                setIsLoading(false);
-                setShowSuccessModal(true);
-            }
-        }, LOADING_DELAY / loadingMessages.length);
-
-      } catch (err: unknown) {
-        console.group('❌ Invoice Generation Error');
-        console.error('Error Type:', err instanceof Error ? err.constructor.name : typeof err);
-        console.error('Error Message:', err instanceof Error ? err.message : String(err));
-        console.error('Full Error Object:', err);
-        if (err instanceof Response) {
-            console.error('Response Status:', err.status);
-            console.error('Response Status Text:', err.statusText);
-            const text = await err.text();
-            console.error('Response Body:', text);
+  
+        // Generate the contract URL using the contract ID
+        const contractId = data.id;
+        const generatedUrl = `https://app.firmos.ai/contracts/submit?contractId=${contractId}`;
+        setContractUrl(generatedUrl);
+        return generatedUrl;
+      } catch (err) {
+        console.error('Error sending contract:', err);
+        throw err;
+      }
+    };
+  
+    try {
+      console.time('Contract Creation Duration');
+      const generatedUrl = await sendContract();
+      console.timeEnd('Contract Creation Duration');
+  
+      // Process loading messages
+      const interval = setInterval(() => {
+        currentMessage++;
+        if (currentMessage < loadingMessages.length) {
+          setLoadingText(loadingMessages[currentMessage]);
         }
-        console.trace('Error Stack Trace:');
-        console.groupEnd();
-
-        setError(err instanceof Error ? err.message : 'An unknown error occurred');
-        setIsLoading(false);
+        if (currentMessage >= loadingMessages.length) {
+          clearInterval(interval);
+          setIsLoading(false);
+          setShowSuccessModal(true);
+        }
+      }, LOADING_DELAY / loadingMessages.length);
+    } catch (err) {
+      console.error('❌ Error during contract creation:', err);
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      setIsLoading(false);
     }
-};
-
+  };
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     setShowSuccessModal(false)
@@ -470,7 +435,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
             <DialogHeader>
               <DialogTitle>Success!</DialogTitle>
               <DialogDescription>
-                Your invoice is ready. Click the link below to view it.
+                Your Contract is ready. Click the link below to view it.
               </DialogDescription>
             </DialogHeader>
             <div className="mt-4">
@@ -478,13 +443,13 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
                             // Sample Implementation
                 // href={invoiceurl}
                 //href='https://app.firmos.ai/invoices/pay?invoiceId='
-                href="https://app.firmos.ai/invoices"
+                href={contractUrl}
                 className="text-blue-500 hover:text-blue-600 transition-colors"
                 onClick={handleInvoiceClick}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Click here to go to the invoice
+                Sign Contract
               </a>
             </div>
           </DialogContent>
