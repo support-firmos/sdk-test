@@ -46,31 +46,39 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     "Almost there!"
   ]
 
+  // 1 pilar
   const pillars = {
     'business-dev': {
+      //title: 'Biz-dev',
       name: 'Business Development',
       description: 'Enhance lead generation and client acquisition strategies.'
     },
     'operations': {
+       //title: 'Ops',
       name: 'Operations',
       description: 'Streamline internal processes and improve efficiency.'
     },
     'talent': {
+       //title: 'talent',
       name: 'Talent',
       description: 'Optimize talent management and team performance.'
     }
   }
 
+  // 2 pilars
   const pillarCombos = {
     'business-dev-talent': {
+       //title: 'biz-dev + talent',
       name: 'Business Development + Talent',
       description: 'Boost client acquisition while optimizing team performance.'
     },
     'talent-operations': {
+       //title: 'talent + ops',
       name: 'Talent + Operations',
       description: 'Enhance team efficiency and streamline internal processes.'
     },
     'business-dev-operations': {
+       //title: 'biz-dev + ops',
       name: 'Business Development + Operations',
       description: 'Improve client acquisition and internal operational efficiency.'
     }
@@ -144,7 +152,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
       ]
     }
   ]
-  
+
 // Construct the client name
 const clientName = sessionData.client 
 ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
@@ -198,6 +206,7 @@ const clientName = sessionData.client
         clearInterval(interval)
         setIsLoading(false)
         window.open('https://app.firmos.ai/contracts?view=templates', '_blank')
+        //window.open('https://app.firmos.ai/contracts/submit?contractId=', '_blank')
       }
     }, LOADING_DELAY / loadingMessages.length)
   }
