@@ -17,6 +17,7 @@ import {
 // Add these new types
 type SessionData = {
   client?: {
+    id: string;
     givenName: string;
     familyName: string;
   };
@@ -113,7 +114,6 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   ]
 
   const handleSelectPackage = async () => { 
-    // Check if a product is selected
     if (!selectedProduct) {
         setError("Please select a package first");
         return;
@@ -124,7 +124,6 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     let currentMessage = 0;
     setLoadingText(loadingMessages[currentMessage]);
 
-    // Get the selected product details
     const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
         setError("Selected product not found");
@@ -132,28 +131,24 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         return;
     }
 
-     // Construct the client name
     const clientName = sessionData.client 
       ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
       : sessionData.company?.name || "Unknown Client";
-      
-    // const clientName = "Earyl Buque";
 
-    // Single encode the parameters with proper space and bracket handling
-const encodeParam = (str: string) => {
-  return str.split('').map(char => {
-    switch(char) {
-      case ' ': return '%20';
-      case '[': return '%5B';
-      case ']': return '%5D';
-      case '(': return '%28';
-      case ',': return '%2C';
-      case ')': return '%29';
-      case '%': return '%25';
-      default: return char;
-    }
-  }).join('');
-};
+    const encodeParam = (str: string) => {
+      return str.split('').map(char => {
+        switch(char) {
+          case ' ': return '%20';
+          case '[': return '%5B';
+          case ']': return '%5D';
+          case '(': return '%28';
+          case ',': return '%2C';
+          case ')': return '%29';
+          case '%': return '%25';
+          default: return char;
+        }
+      }).join('');
+    };
 
     const url = `/generate-invoice?client_name=${encodeParam(clientName)}&product_name=${encodeParam(selectedProductDetails.title)}`;
 
@@ -163,52 +158,37 @@ const encodeParam = (str: string) => {
     console.log('🔗 Full URL:', url);
     console.groupEnd();
 
-    try {
-        console.time('Invoice Generation Duration');
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json'
-            },
-            body: ''
-        });
+    console.time('Invoice Generation Duration');
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json'
+        },
+        body: ''
+    });
 
-        console.timeEnd('Invoice Generation Duration');
+    console.timeEnd('Invoice Generation Duration');
 
-        const data = await response.json();
+    const data = await response.json();
 
-        console.group('📥 Invoice Generation Response');
-        console.log('📊 Status:', response.status);
-        console.log('📄 Response Data:', data);
-        console.groupEnd();
+    console.group('📥 Invoice Generation Response');
+    console.log('📊 Status:', response.status);
+    console.log('📄 Response Data:', data);
+    console.groupEnd();
 
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
+    // Process loading messages
+    const interval = setInterval(() => {
+        currentMessage++;
+        if (currentMessage < loadingMessages.length) {
+            setLoadingText(loadingMessages[currentMessage]);
         }
-
-        // Process loading messages
-        const interval = setInterval(() => {
-            currentMessage++;
-            if (currentMessage < loadingMessages.length) {
-                setLoadingText(loadingMessages[currentMessage]);
-            }
-            if (currentMessage >= loadingMessages.length) {
-                clearInterval(interval);
-                setIsLoading(false);
-                setShowSuccessModal(true);
-            }
-        }, LOADING_DELAY / loadingMessages.length);
-
-    } catch (err) {
-        console.group('❌ Invoice Generation Error');
-        console.error('Error Details:', err);
-        console.trace('Error Stack Trace:');
-        console.groupEnd();
-
-        setError(err instanceof Error ? err.message : 'An error occurred');
-        setIsLoading(false);
-    }
+        if (currentMessage >= loadingMessages.length) {
+            clearInterval(interval);
+            setIsLoading(false);
+            setShowSuccessModal(true);
+        }
+    }, LOADING_DELAY / loadingMessages.length);
 };
 
 

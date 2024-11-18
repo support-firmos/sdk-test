@@ -17,6 +17,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
       <h1>Hello & Welcome, &nbsp; &nbsp; <code>{data.client ? data.client.givenName : data.company?.name}</code></h1>
       <BlockPage sessionData={{
         client: data.client ? {
+          id: data.client.id || '',
           givenName: data.client.givenName || '',
           familyName: data.client.familyName || '' 
         } : undefined,
