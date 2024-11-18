@@ -168,17 +168,28 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         console.time('Invoice Generation Duration');
         
         const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json'
-            },
-            body: ''
+          method: 'POST',
+          headers: {
+              'accept': 'application/json'
+          },
+          body: ''
         });
 
         console.timeEnd('Invoice Generation Duration');
 
-        const data = await response.json();
-        console.log(data)
+        // Log the raw response text first
+        const responseText = await response.text();
+        console.log('Raw Response:', responseText);
+
+        // Try to parse as JSON
+        let data;
+        try {
+            data = JSON.parse(responseText);
+        } catch (parseError) {
+            console.error('JSON Parse Error:', parseError);
+            console.error('Raw Response that failed to parse:', responseText);
+            throw new Error(`Failed to parse JSON response: ${responseText}`);
+        }
 
         console.group('📥 Invoice Generation Response');
         console.log('📊 Status:', response.status);
@@ -186,7 +197,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         console.groupEnd();
 
         if (!response.ok) {
-            throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
+            throw new Error(`API error: ${response.status} - ${responseText}`);
         }
 
         // Process loading messages
@@ -202,13 +213,21 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
             }
         }, LOADING_DELAY / loadingMessages.length);
 
-    } catch (err) {
+      } catch (err: unknown) {
         console.group('❌ Invoice Generation Error');
-        console.error('Error Details:', err);
+        console.error('Error Type:', err instanceof Error ? err.constructor.name : typeof err);
+        console.error('Error Message:', err instanceof Error ? err.message : String(err));
+        console.error('Full Error Object:', err);
+        if (err instanceof Response) {
+            console.error('Response Status:', err.status);
+            console.error('Response Status Text:', err.statusText);
+            const text = await err.text();
+            console.error('Response Body:', text);
+        }
         console.trace('Error Stack Trace:');
         console.groupEnd();
 
-        setError(err instanceof Error ? err.message : 'An error occurred');
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
         setIsLoading(false);
     }
 };
