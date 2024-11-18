@@ -26,6 +26,17 @@ type SessionData = {
   };
 };
 
+type Invoice = {
+  id: string;
+  recipientId: string;
+  status: string;
+  total: number;
+}
+
+type ApiResponse = {
+  data: Invoice[];
+}
+
 
 // export function BlockPage() {
 export function BlockPage({ sessionData }: { sessionData: SessionData }) {
@@ -117,11 +128,10 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const checkInvoiceStatus = async (intervalId: NodeJS.Timeout) => {
     try {
       const response = await fetch('/query-match-invoice');
-      const invoices = await response.json();
+      const result = await response.json() as ApiResponse;
       
-      // Find invoice matching client ID
-      const matchedInvoice = invoices.find(
-        (invoice: any) => invoice.recipientId === sessionData.client?.id
+      const matchedInvoice = result.data.find(
+        (invoice) => invoice.recipientId === sessionData.client?.id
       );
       
       if (matchedInvoice) {
