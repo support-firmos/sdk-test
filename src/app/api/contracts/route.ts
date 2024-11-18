@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
     // Get API key using the need utility
     const apiKey = need<string>(
-      process.env.COPILOT_API_KEY,
+      process.env.NEXT_COPILOT_API_KEY,
       'COPILOT_API_KEY is required'
     );
 
