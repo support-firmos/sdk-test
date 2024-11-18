@@ -35,6 +35,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
   const LOADING_DELAY = 7000; // 7 seconds
   const loadingMessages = [
@@ -113,6 +114,31 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   ]
 
+  const checkInvoiceStatus = async (intervalId: NodeJS.Timeout) => {
+    try {
+      const response = await fetch('/query-match-invoice');
+      const invoices = await response.json();
+      
+      // Find invoice matching client ID
+      const matchedInvoice = invoices.find(
+        (invoice: any) => invoice.recipientId === sessionData.client?.id
+      );
+      
+      if (matchedInvoice) {
+        setInvoiceId(matchedInvoice.id);
+        clearInterval(intervalId);
+        setIsLoading(false);
+        setShowSuccessModal(true);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Failed to check invoice status:', error);
+      return false;
+    }
+  };
+
   const handleSelectPackage = async () => { 
     if (!selectedProduct) {
         setError("Please select a package first");
@@ -178,18 +204,21 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     console.groupEnd();
 
     // Process loading messages
-    const interval = setInterval(() => {
-        currentMessage++;
-        if (currentMessage < loadingMessages.length) {
-            setLoadingText(loadingMessages[currentMessage]);
-        }
-        if (currentMessage >= loadingMessages.length) {
-            clearInterval(interval);
-            setIsLoading(false);
-            setShowSuccessModal(true);
-        }
+
+    const interval = setInterval(async () => {
+      currentMessage++;
+      if (currentMessage < loadingMessages.length) {
+        setLoadingText(loadingMessages[currentMessage]);
+      }
+      
+      const found = await checkInvoiceStatus(interval);
+      if (found || currentMessage >= loadingMessages.length) {
+        clearInterval(interval);
+        setIsLoading(false);
+        setShowSuccessModal(true);
+      }
     }, LOADING_DELAY / loadingMessages.length);
-};
+  };
 
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -425,29 +454,26 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         </footer>
 
         <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Success!</DialogTitle>
-              <DialogDescription>
-                Your invoice is ready. Click the link below to view it.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4">
-              <a
-                            // Sample Implementation
-                // href={invoiceurl}
-                //href='https://app.firmos.ai/invoices/pay?invoiceId='
-                href="https://app.firmos.ai/invoices"
-                className="text-blue-500 hover:text-blue-600 transition-colors"
-                onClick={handleInvoiceClick}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Click here to go to the invoice
-              </a>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Success!</DialogTitle>
+          <DialogDescription>
+            Your invoice is ready. Click the link below to view it.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <a
+            href={`https://app.firmos.ai/invoices/pay?invoiceId=${invoiceId}`}
+            className="text-blue-500 hover:text-blue-600 transition-colors"
+            onClick={handleInvoiceClick}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Click here to go to the invoice
+          </a>
+        </div>
+      </DialogContent>
+    </Dialog>
       </div>
     </div>
   )
