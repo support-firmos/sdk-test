@@ -135,7 +135,14 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   
     const clientName = `${sessionData.client?.givenName} ${sessionData.client?.familyName}`;
     const recipientId = sessionData.client?.id || '5e0c8a63-c6ca-420d-9418-4465257bafc3';
-    const contractTemplateId = '7369088e-d5e2-4f2b-8452-56923d4c3c1e';
+    const onePillarBizdev = '88fc5a73-69e7-4593-92ec-7f1cd217e7d3';
+    const onePillarOps = '1a4b452d-0de8-482a-a99b-53024ab70b05';
+    const onePillarTalent = '4dc6ca4d-9f23-4602-8bfd-4d7a66b75109';
+    const twoPillarsBizdevOps = '6dbbb103-c43f-456b-acf1-04d9aaa3475c';
+    const twoPillarsBizdevTalent = '020dcf7f-4e0b-418f-b93b-69e041c92d3a';
+    const twoPillarsTalentOps = '9250db95-6f40-43d3-bf39-6cec8f903936';
+    const threePillars = 'be1a6856-3de9-42ca-99dd-bac00d8c80d4';
+    const consultingServices = '6b5f3ef9-6fff-4861-9758-29b804f22167';
   
     // Reset the contract URL state
     setContractUrl(null);
