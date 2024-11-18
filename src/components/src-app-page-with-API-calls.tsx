@@ -17,7 +17,7 @@ import {
 // Add these new types
 type SessionData = {
   client?: {
-    id:string;
+    id: string;
     givenName: string;
     familyName: string;
   };
@@ -25,6 +25,17 @@ type SessionData = {
     name: string;
   };
 };
+
+type Invoice = {
+  id: string;
+  recipientId: string;
+  status: string;
+  total: number;
+}
+
+type ApiResponse = {
+  data: Invoice[];
+}
 
 
 // export function BlockPage() {
@@ -35,6 +46,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null)
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
 
   const LOADING_DELAY = 7000; // 7 seconds
   const loadingMessages = [
@@ -113,8 +125,31 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     }
   ]
 
+  const checkInvoiceStatus = async (intervalId: NodeJS.Timeout) => {
+    try {
+      const response = await fetch('/query-match-invoice');
+      const result = await response.json() as ApiResponse;
+      
+      const matchedInvoice = result.data.find(
+        (invoice) => invoice.recipientId === sessionData.client?.id
+      );
+      
+      if (matchedInvoice) {
+        setInvoiceId(matchedInvoice.id);
+        clearInterval(intervalId);
+        setIsLoading(false);
+        setShowSuccessModal(true);
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Failed to check invoice status:', error);
+      return false;
+    }
+  };
+
   const handleSelectPackage = async () => { 
-    // Check if a product is selected
     if (!selectedProduct) {
         setError("Please select a package first");
         return;
@@ -125,7 +160,6 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     let currentMessage = 0;
     setLoadingText(loadingMessages[currentMessage]);
 
-    // Get the selected product details
     const selectedProductDetails = products.find(p => p.id === selectedProduct);
     if (!selectedProductDetails) {
         setError("Selected product not found");
@@ -133,14 +167,10 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         return;
     }
 
-     // Construct the client name
     const clientName = sessionData.client 
       ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
       : sessionData.company?.name || "Unknown Client";
-      
-    // const clientName = "Earyl Buque";
 
-    // Single encode the parameters with proper space and bracket handling
     const encodeParam = (str: string) => {
       return str.split('').map(char => {
         switch(char) {
@@ -164,54 +194,41 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
     console.log('🔗 Full URL:', url);
     console.groupEnd();
 
-    try {
-        console.time('Invoice Generation Duration');
-        
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'accept': 'application/json'
-            },
-            body: ''
-        });
+    console.time('Invoice Generation Duration');
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'accept': 'application/json'
+        },
+        body: ''
+    });
 
-        console.timeEnd('Invoice Generation Duration');
+    console.timeEnd('Invoice Generation Duration');
 
-        const data = await response.json();
-        console.log(data)
+    const data = await response.json();
 
-        console.group('📥 Invoice Generation Response');
-        console.log('📊 Status:', response.status);
-        console.log('📄 Response Data:', data);
-        console.groupEnd();
+    console.group('📥 Invoice Generation Response');
+    console.log('📊 Status:', response.status);
+    console.log('📄 Response Data:', data);
+    console.groupEnd();
 
-        if (!response.ok) {
-            throw new Error(`API error: ${response.status} - ${JSON.stringify(data)}`);
-        }
+    // Process loading messages
 
-        // Process loading messages
-        const interval = setInterval(() => {
-            currentMessage++;
-            if (currentMessage < loadingMessages.length) {
-                setLoadingText(loadingMessages[currentMessage]);
-            }
-            if (currentMessage >= loadingMessages.length) {
-                clearInterval(interval);
-                setIsLoading(false);
-                setShowSuccessModal(true);
-            }
-        }, LOADING_DELAY / loadingMessages.length);
-
-    } catch (err) {
-        console.group('❌ Invoice Generation Error');
-        console.error('Error Details:', err);
-        console.trace('Error Stack Trace:');
-        console.groupEnd();
-
-        setError(err instanceof Error ? err.message : 'An error occurred');
+    const interval = setInterval(async () => {
+      currentMessage++;
+      if (currentMessage < loadingMessages.length) {
+        setLoadingText(loadingMessages[currentMessage]);
+      }
+      
+      const found = await checkInvoiceStatus(interval);
+      if (found || currentMessage >= loadingMessages.length) {
+        clearInterval(interval);
         setIsLoading(false);
-    }
-};
+        setShowSuccessModal(true);
+      }
+    }, LOADING_DELAY / loadingMessages.length);
+  };
 
 
   const handleInvoiceClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -447,29 +464,26 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
         </footer>
 
         <Dialog open={showSuccessModal} onOpenChange={setShowSuccessModal}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>Success!</DialogTitle>
-              <DialogDescription>
-                Your invoice is ready. Click the link below to view it.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="mt-4">
-              <a
-                            // Sample Implementation
-                // href={invoiceurl}
-                //href='https://app.firmos.ai/invoices/pay?invoiceId='
-                href="https://app.firmos.ai/invoices"
-                className="text-blue-500 hover:text-blue-600 transition-colors"
-                onClick={handleInvoiceClick}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Click here to go to the invoice
-              </a>
-            </div>
-          </DialogContent>
-        </Dialog>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Success!</DialogTitle>
+          <DialogDescription>
+            Your invoice is ready. Click the link below to view it.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="mt-4">
+          <a
+            href={`https://app.firmos.ai/invoices/pay?invoiceId=${invoiceId}`}
+            className="text-blue-500 hover:text-blue-600 transition-colors"
+            onClick={handleInvoiceClick}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Click here to go to the invoice
+          </a>
+        </div>
+      </DialogContent>
+    </Dialog>
       </div>
     </div>
   )
