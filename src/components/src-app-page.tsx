@@ -40,6 +40,9 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
   const [confirmationMessage, setConfirmationMessage] = useState('')
   const [loadingText, setLoadingText] = useState("Getting things ready...")
   const [error, setError] = useState<string | null>(null);
+  const [showFinalModal, setShowFinalModal] = useState(false);
+  const [contractUrl, setContractUrl] = useState<string | null>(null);
+  
 
   const LOADING_DELAY = 7000; // 7 seconds
   const loadingMessages = [
@@ -150,7 +153,7 @@ export function BlockPage({ sessionData }: { sessionData: SessionData }) {
 // Construct the client name
 const clientName = sessionData.client 
 ? `${sessionData.client.givenName} ${sessionData.client.familyName}`
-: sessionData.company?.name || "Unknown Client";
+: sessionData.company?.name || "Ralph Estor";
 
 const onePillarBizdev = '0bb94cb5-538b-4735-930d-947c3676f845';
 const onePillarOps = '1a4b452d-0de8-482a-a99b-53024ab70b05';
@@ -233,9 +236,8 @@ const consultingServices = '6b5f3ef9-6fff-4861-9758-29b804f22167';
       return;
     }
   
-    const recipientId = sessionData.client?.id || "";
+    const recipientId = sessionData.client?.id || "5e0c8a63-c6ca-420d-9418-4465257bafc3";
   
-    // Function to send the contract
     const sendContract = async () => {
       const url = '/api/sendContract';
       const payload = {
@@ -273,13 +275,19 @@ const consultingServices = '6b5f3ef9-6fff-4861-9758-29b804f22167';
         }
     
         const contractId = data.id;
-        return `https://app.firmos.ai/contracts/submit?contractId=${contractId}`;
+        const contractUrl = `https://app.firmos.ai/contracts/submit?contractId=${contractId}`;
+        setContractUrl(contractUrl); // Save the contract URL to the state for use in the modal
+    
+        setShowFinalModal(true); // Show the modal after successfully creating the contract
+        setIsLoading(false); // Turn off the loading state
+        return contractUrl; // Return the URL if needed elsewhere
       } catch (err) {
         console.error('Error sending contract:', err);
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+        setIsLoading(false); // Ensure loading is turned off on error
         throw err;
       }
     };
-    
     
     
     
@@ -631,6 +639,31 @@ const consultingServices = '6b5f3ef9-6fff-4861-9758-29b804f22167';
               >
                 Confirm and Proceed
               </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showFinalModal} onOpenChange={setShowFinalModal}>
+          <DialogContent className="sm:max-w-[425px] bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+            <DialogHeader>
+              <DialogTitle className="text-2xl font-bold">Contract Ready</DialogTitle>
+            </DialogHeader>
+            <DialogDescription className="text-gray-600 dark:text-gray-400 py-4">
+              Your contract for purchasing our product is ready for signing.
+            </DialogDescription>
+            <DialogFooter>
+              {contractUrl ? (
+                <a
+                  href={contractUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-blue-500 hover:bg-blue-600 text-white transition-colors py-2 px-4 text-center rounded-lg inline-block"
+                >
+                  Go to Contract
+                </a>
+              ) : (
+                <p className="text-gray-400">Loading contract link...</p>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>

@@ -62,9 +62,9 @@ export async function POST(request: Request) {
 
     // Map contract name to product name
     const productMapping: { [key: string]: string } = {
-      '1-Pillar Bizdev': '[TEST] Product',
-      '1-Pillar Operations': '[TEST] Product',
-      '1-Pillar Talent': '[TEST] Product',
+      '1-Pillar Bizdev': '[DEV] FirmOS Growth Platform - Core Focus (1 Pillar) - $2,450',
+      '1-Pillar Operations': '[DEV] FirmOS Growth Platform - Core Focus (1 Pillar) - $2,450',
+      '1-Pillar Talent': '[DEV] FirmOS Growth Platform - Core Focus (1 Pillar) - $2,450',
       '2-Pillar Bizdev-Talent': 'FirmOS Business Accelerator (2 Pillars) - $3,450 (30% Savings)',
       '2-Pillar Talent-Ops': 'FirmOS Business Accelerator (2 Pillars) - $3,450 (30% Savings)',
       '2-Pillar Bizdev-Ops': 'FirmOS Business Accelerator (2 Pillars) - $3,450 (30% Savings)',
